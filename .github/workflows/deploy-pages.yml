@@ -28,7 +28,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Setup Pages with enablement
+        if: ${{ secrets.PAGES_DEPLOY_TOKEN != '' }}
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+
       - name: Setup Pages
+        if: ${{ secrets.PAGES_DEPLOY_TOKEN == '' }}
         uses: actions/configure-pages@v5
 
       - name: Install dependencies
