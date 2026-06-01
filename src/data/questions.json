@@ -1,0 +1,354 @@
+[
+  {
+    "id": "form",
+    "title": "Q1. 你今天想吃哪一種？",
+    "description": "先分形式，避免把湯拉麵、沾麵和乾拌類混在一起。",
+    "selectionType": "single",
+    "minSelections": 1,
+    "maxSelections": 1,
+    "weight": 16,
+    "options": [
+      {
+        "value": "soup",
+        "label": "湯拉麵",
+        "description": "一般碗裝湯麵，後面會再分清湯或白湯。"
+      },
+      {
+        "value": "tsukemen",
+        "label": "沾麵",
+        "description": "麵與沾汁分開，重點在沾汁輪廓。"
+      },
+      {
+        "value": "dry",
+        "label": "拌麵 / 油そば",
+        "description": "幾乎沒有湯，重點是油香、拌醬或辣麻。"
+      }
+    ]
+  },
+  {
+    "id": "archetype",
+    "title": "Q2. 這碗最接近哪種輪廓？",
+    "description": "Q2 會跟著形式切換選項。",
+    "selectionType": "single",
+    "minSelections": 1,
+    "maxSelections": 1,
+    "weight": 16,
+    "branchOptions": {
+      "soup": [
+        {
+          "value": "chintan",
+          "label": "清湯",
+          "description": "湯體清澈、線條乾淨，重視出汁層次。"
+        },
+        {
+          "value": "paitan",
+          "label": "白湯",
+          "description": "乳化白濁、質地厚實，多半更有包覆感。"
+        }
+      ],
+      "tsukemen": [
+        {
+          "value": "konbusui-light",
+          "label": "清爽昆布水",
+          "description": "麵體自帶昆布水，走清爽線條。"
+        },
+        {
+          "value": "gyokai-rich",
+          "label": "濃厚魚介",
+          "description": "節香、魚粉、魚介濃汁感明顯。"
+        },
+        {
+          "value": "miso-rich",
+          "label": "濃厚味噌",
+          "description": "沾汁更偏味噌、厚重與炒香。"
+        },
+        {
+          "value": "tsukemen-other",
+          "label": "其他沾麵",
+          "description": "知道想吃沾麵，但不特別鎖定以上輪廓。"
+        }
+      ],
+      "dry": [
+        {
+          "value": "aburasoba",
+          "label": "油そば",
+          "description": "重點在油香與醬香，不是辣麻主導。"
+        },
+        {
+          "value": "taiwan-mazesoba",
+          "label": "台灣まぜそば",
+          "description": "肉燥、蒜、辛香與濃拌感更強。"
+        },
+        {
+          "value": "soupless-tantan",
+          "label": "汁なし担々",
+          "description": "偏辣麻與芝麻，香氣走擔擔麵支線。"
+        },
+        {
+          "value": "dry-other",
+          "label": "其他乾拌",
+          "description": "確定要乾拌，但不想被既有分類綁住。"
+        }
+      ]
+    }
+  },
+  {
+    "id": "tare",
+    "title": "Q3. 主要調味想偏哪邊？",
+    "description": "這題對 shoyu / shio / miso / 辣麻支線辨識力很高。",
+    "selectionType": "single",
+    "minSelections": 1,
+    "maxSelections": 1,
+    "weight": 15,
+    "options": [
+      {
+        "value": "shoyu",
+        "label": "醬油",
+        "description": "醬香與鹹鮮感更清楚。"
+      },
+      {
+        "value": "shio",
+        "label": "鹽味",
+        "description": "想讓湯底或出汁輪廓更直接。"
+      },
+      {
+        "value": "miso",
+        "label": "味噌",
+        "description": "厚實發酵香與甜鹹感更明確。"
+      },
+      {
+        "value": "spicy-sesame",
+        "label": "辣味 / 芝麻",
+        "description": "偏辣麻、胡麻、担々或台灣まぜ路線。"
+      },
+      {
+        "value": "none",
+        "label": "原味 / 不強調",
+        "description": "不是清淡，而是讓主湯或主角自己說話。"
+      }
+    ]
+  },
+  {
+    "id": "source",
+    "title": "Q4. 你想讓哪種出汁或主角最明顯？",
+    "description": "最多選 2 個，這一題用來切豚骨、雞、鴨、魚介、貝等主線。",
+    "selectionType": "multiple",
+    "minSelections": 1,
+    "maxSelections": 2,
+    "weight": 18,
+    "options": [
+      {
+        "value": "pork",
+        "label": "豬",
+        "description": "豚骨、叉燒脂香、豬油感。"
+      },
+      {
+        "value": "chicken",
+        "label": "雞",
+        "description": "雞湯、雞油或雞白湯。"
+      },
+      {
+        "value": "duck",
+        "label": "鴨",
+        "description": "鴨油、鴨清湯、鴨白湯。"
+      },
+      {
+        "value": "beef",
+        "label": "牛",
+        "description": "牛骨或牛肉香為主角。"
+      },
+      {
+        "value": "fish-seafood",
+        "label": "魚介",
+        "description": "魚乾、節、煮干、魚粉與海味感。"
+      },
+      {
+        "value": "shellfish",
+        "label": "貝類",
+        "description": "蛤蜊、蜆、干貝等鮮鹹感。"
+      },
+      {
+        "value": "shrimp-crab",
+        "label": "蝦蟹",
+        "description": "甲殼甜鮮、濃縮甲殼香。"
+      },
+      {
+        "value": "vegetable",
+        "label": "蔬菜",
+        "description": "想要更乾淨或植系的湯體。"
+      },
+      {
+        "value": "mixed",
+        "label": "混合",
+        "description": "知道想要複合感，但不想鎖單一主角。"
+      },
+      {
+        "value": "unsure",
+        "label": "不確定",
+        "description": "先讓其他題目決定結果。",
+        "exclusive": true
+      }
+    ]
+  },
+  {
+    "id": "body",
+    "title": "Q5. 你想要多重口？",
+    "description": "用濃淡與油脂感調整推薦重心。",
+    "selectionType": "single",
+    "minSelections": 1,
+    "maxSelections": 1,
+    "weight": 14,
+    "options": [
+      {
+        "value": "light",
+        "label": "淡麗清爽",
+        "description": "線條俐落、收尾乾淨。"
+      },
+      {
+        "value": "balanced",
+        "label": "平衡順口",
+        "description": "有層次但不過重。"
+      },
+      {
+        "value": "rich",
+        "label": "濃厚",
+        "description": "湯體或醬體明顯更厚。"
+      },
+      {
+        "value": "backfat-heavy",
+        "label": "背脂重口",
+        "description": "油脂、鹹香與厚感要再更上一階。"
+      },
+      {
+        "value": "ultra-heavy",
+        "label": "極濃爆量",
+        "description": "明確追求壓倒性份量與衝擊。"
+      }
+    ]
+  },
+  {
+    "id": "noodle",
+    "title": "Q6. 麵體最接近哪種？",
+    "description": "麵型對博多、家系、札幌、二郎這類流派很有辨識度。",
+    "selectionType": "single",
+    "minSelections": 1,
+    "maxSelections": 1,
+    "weight": 11,
+    "options": [
+      {
+        "value": "thin-straight",
+        "label": "細直",
+        "description": "入口快、吸湯直接。"
+      },
+      {
+        "value": "medium-thin-straight",
+        "label": "中細直",
+        "description": "保留俐落感，但稍有咬勁。"
+      },
+      {
+        "value": "medium-thick-straight",
+        "label": "中粗直",
+        "description": "更能扛住厚湯或濃醬。"
+      },
+      {
+        "value": "medium-thick-wavy",
+        "label": "中粗捲",
+        "description": "容易掛湯，也常見於味噌系。"
+      },
+      {
+        "value": "extra-thick",
+        "label": "極粗",
+        "description": "份量感、咀嚼感與拌麵衝擊更強。"
+      }
+    ]
+  },
+  {
+    "id": "signature",
+    "title": "Q7. 你想看到哪些標誌元素？",
+    "description": "最多選 2 個，用來微調家系、札幌、二郎、魚介等風格。",
+    "selectionType": "multiple",
+    "minSelections": 1,
+    "maxSelections": 2,
+    "weight": 10,
+    "options": [
+      {
+        "value": "nori-spinach",
+        "label": "海苔 + 菠菜",
+        "description": "常見於家系識別線索。"
+      },
+      {
+        "value": "corn-butter",
+        "label": "玉米 + 奶油",
+        "description": "味噌與札幌線的常見記號。"
+      },
+      {
+        "value": "bean-sprout-garlic-backfat",
+        "label": "豆芽 + 蒜 + 背脂",
+        "description": "明確往二郎或爆量系靠攏。"
+      },
+      {
+        "value": "fish-kombu",
+        "label": "魚粉 / 節香 / 昆布",
+        "description": "魚介或昆布水支線的重要線索。"
+      },
+      {
+        "value": "yuzu-citrus",
+        "label": "柚子 / 柑橘",
+        "description": "常用來拉亮清湯、鴨或貝系。"
+      },
+      {
+        "value": "no-preference",
+        "label": "無特別",
+        "description": "先不要讓標誌配料決定結果。",
+        "exclusive": true
+      }
+    ]
+  },
+  {
+    "id": "exclusions",
+    "title": "Q8. 有不吃的嗎？",
+    "description": "這題只做硬過濾，不會參與計分。",
+    "selectionType": "multiple",
+    "minSelections": 1,
+    "maxSelections": 6,
+    "weight": 0,
+    "options": [
+      {
+        "value": "pork",
+        "label": "豬",
+        "description": "排除豬骨、豬油與豬肉明顯風格。"
+      },
+      {
+        "value": "chicken",
+        "label": "雞",
+        "description": "排除雞湯、雞白湯與雞脂感。"
+      },
+      {
+        "value": "duck",
+        "label": "鴨",
+        "description": "排除鴨清湯、鴨白湯與鴨油。"
+      },
+      {
+        "value": "beef",
+        "label": "牛",
+        "description": "排除牛骨與牛香路線。"
+      },
+      {
+        "value": "seafood",
+        "label": "海鮮",
+        "description": "排除魚介、貝類與甲殼風味。"
+      },
+      {
+        "value": "dairy",
+        "label": "奶",
+        "description": "排除奶油或乳製系元素。"
+      },
+      {
+        "value": "none",
+        "label": "無",
+        "description": "沒有硬性排除。",
+        "exclusive": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,131 @@
+{
+  "stores": [
+    {
+      "id": "ippudo-japan",
+      "name": "一風堂",
+      "location": "日本・全国展開",
+      "summary": "博多とんこつを軸に、白丸元味・赤丸新味・からか麺を展開する豚骨系チェーン。",
+      "styleIds": ["hakata", "tonkotsu"],
+      "sourceUrl": "https://www.ippudo.com/menu/"
+    },
+    {
+      "id": "yamatoya-japan",
+      "name": "横浜家系ラーメン大和家",
+      "location": "日本・全国展開",
+      "summary": "豚骨醤油スープと中太麺を看板に、631ラーメンや魚介つけ麺も展開する家系チェーン。",
+      "styleIds": ["iekei", "gyokai-tsukemen"],
+      "sourceUrl": "https://iekei-yamatoya.com/menu"
+    },
+    {
+      "id": "tokyo-aburagumi",
+      "name": "東京油組総本店",
+      "location": "日本・全国展開",
+      "summary": "老舗製麺所発祥の自家製麺と秘伝のタレを売りにする油そば専門店。",
+      "styleIds": ["aburasoba"],
+      "sourceUrl": "https://www.tokyo-aburasoba.com/"
+    },
+    {
+      "id": "menya-hanabi",
+      "name": "麺屋はなび",
+      "location": "名古屋本店 / 海外展開",
+      "summary": "台湾まぜそば発祥店。台湾ミンチを極太麺にのせた汁無し麺を看板に展開。",
+      "styleIds": ["taiwan-mazesoba"],
+      "sourceUrl": "https://www.menya-hanabi.com/taiwanmazesoba"
+    },
+    {
+      "id": "chukasoba-tomita",
+      "name": "中華蕎麦とみ田",
+      "location": "千葉県松戸市",
+      "summary": "超濃厚豚骨魚介スープと自家製極太麺で知られる松戸のつけ麺店。",
+      "styleIds": ["gyokai-tsukemen"],
+      "sourceUrl": "https://www.tomita-cocoro.jp/"
+    }
+  ],
+  "items": [
+    {
+      "id": "ippudo-shiromaru",
+      "storeId": "ippudo-japan",
+      "name": "白丸元味",
+      "summary": "創業当時からの味を今に引き継ぐ一杯。なめらかなとんこつスープに塩ベースのかえし、歯切れのよい細麺を合わせる。",
+      "styleId": "hakata",
+      "coreTypeIds": ["hakata:standard"],
+      "subtypeIds": ["hakata:standard:thin-straight"]
+    },
+    {
+      "id": "ippudo-akamaru",
+      "storeId": "ippudo-japan",
+      "name": "赤丸新味",
+      "summary": "にんにくの風味が効いた香油と特製辛味噌を溶かしながら食べる、コクと深みのある豚骨ラーメン。",
+      "styleId": "tonkotsu",
+      "coreTypeIds": ["tonkotsu:heavy"],
+      "subtypeIds": ["tonkotsu:heavy:medium-thin-straight"]
+    },
+    {
+      "id": "yamatoya-631-ramen",
+      "storeId": "yamatoya-japan",
+      "name": "631ラーメン 醤油",
+      "summary": "豚骨醤油スープと中太麺を押し出した、大和家の看板ラーメン。",
+      "styleId": "iekei",
+      "coreTypeIds": ["iekei:heavy"],
+      "subtypeIds": ["iekei:heavy:medium-thick-straight"]
+    },
+    {
+      "id": "yamatoya-ramen-shoyu",
+      "storeId": "yamatoya-japan",
+      "name": "ラーメン 醤油",
+      "summary": "豚骨醤油スープと中太麺を軸にした、より標準寄りの家系ラーメン。",
+      "styleId": "iekei",
+      "coreTypeIds": ["iekei:standard"],
+      "subtypeIds": ["iekei:standard:medium-thick-straight"]
+    },
+    {
+      "id": "yamatoya-tsukemen-gyokai",
+      "storeId": "yamatoya-japan",
+      "name": "つけ麺 魚介",
+      "summary": "魚介味のつけ汁で食べるつけ麺ライン。家系より魚介沾麵寄りの探索用。",
+      "styleId": "gyokai-tsukemen",
+      "coreTypeIds": ["gyokai-tsukemen:standard"],
+      "subtypeIds": ["gyokai-tsukemen:standard:medium-thick-straight"]
+    },
+    {
+      "id": "aburagumi-aburasoba",
+      "storeId": "tokyo-aburagumi",
+      "name": "油そば",
+      "summary": "コクのある特製タレを使用した、東京油組総本店の定番油そば。",
+      "price": 880,
+      "currency": "JPY",
+      "styleId": "aburasoba",
+      "coreTypeIds": ["aburasoba:standard"],
+      "subtypeIds": ["aburasoba:standard:medium-thick-straight"]
+    },
+    {
+      "id": "aburagumi-karamiso-aburasoba",
+      "storeId": "tokyo-aburagumi",
+      "name": "辛味噌油そば",
+      "summary": "ピリッとした辛味で味を引き立てる、より重めの油そば。",
+      "price": 980,
+      "currency": "JPY",
+      "styleId": "aburasoba",
+      "coreTypeIds": ["aburasoba:heavy"],
+      "subtypeIds": ["aburasoba:heavy:medium-thick-straight"]
+    },
+    {
+      "id": "hanabi-taiwan-mazesoba",
+      "storeId": "menya-hanabi",
+      "name": "台湾まぜそば",
+      "summary": "唐辛子とニンニクを効かせた醤油味の台湾ミンチを極太麺に乗せた、元祖の汁無し麺。",
+      "styleId": "taiwan-mazesoba",
+      "coreTypeIds": ["taiwan-mazesoba:heavy"],
+      "subtypeIds": ["taiwan-mazesoba:heavy:extra-thick"]
+    },
+    {
+      "id": "tomita-tsukemen",
+      "storeId": "chukasoba-tomita",
+      "name": "つけ麺",
+      "summary": "超濃厚豚骨魚介スープと唯一無二の自家製極太麺で食べる、とみ田の代表線。",
+      "styleId": "gyokai-tsukemen",
+      "coreTypeIds": ["gyokai-tsukemen:heavy"],
+      "subtypeIds": ["gyokai-tsukemen:heavy:extra-thick"]
+    }
+  ]
+}

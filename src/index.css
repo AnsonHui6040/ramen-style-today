@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+:root {
+  --sand: #fff6ea;
+  --paper: rgba(255, 251, 245, 0.92);
+  --edge: rgba(120, 84, 59, 0.18);
+  --ink: #2d1c14;
+  --ink-soft: #5e4535;
+  --muted: #6f6259;
+  --accent: #c56a32;
+  --accent-strong: #8b3f1d;
+  --display: 'Fraunces', 'Times New Roman', serif;
+  --sans: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --shadow-soft: 0 24px 50px rgba(92, 62, 39, 0.12);
+
+  color: var(--ink-soft);
+  background: var(--sand);
+  font: 17px/1.6 var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(244, 176, 120, 0.42), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(255, 220, 186, 0.55), transparent 18%),
+    linear-gradient(180deg, #fff8ef 0%, #fff3e4 48%, #fff9f1 100%);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(132, 98, 72, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(132, 98, 72, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ink);
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+
+h3 {
+  font-size: 1.24rem;
+  line-height: 1.2;
+}
+
+a {
+  color: inherit;
+}
+
+@media (max-width: 720px) {
+  :root {
+    font-size: 16px;
+  }
+}
