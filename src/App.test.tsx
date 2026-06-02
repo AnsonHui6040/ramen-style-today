@@ -66,6 +66,30 @@ describe('App questionnaire flow', () => {
     expect(screen.getByText('這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的沾汁。')).toBeInTheDocument()
   })
 
+  test('lets users change a single-choice answer before continuing', async () => {
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '開始問卷' }))
+
+    const soup = screen.getByRole('button', { name: /湯拉麵/ })
+    const tsukemen = screen.getByRole('button', { name: /沾麵/ })
+
+    await user.click(tsukemen)
+    expect(tsukemen).toHaveAttribute('aria-pressed', 'true')
+    expect(soup).toBeEnabled()
+
+    await user.click(soup)
+    expect(soup).toHaveAttribute('aria-pressed', 'true')
+    expect(tsukemen).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    expect(screen.getByRole('button', { name: /^清湯/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /清爽昆布水/ })).not.toBeInTheDocument()
+  })
+
   test('switches questionnaire copy between English and Japanese', async () => {
     const user = userEvent.setup()
 
@@ -102,5 +126,34 @@ describe('App questionnaire flow', () => {
 
     expect(screen.getByRole('heading', { name: 'Q3. 拌醬調味想偏哪邊？' })).toBeInTheDocument()
     expect(screen.getByText('這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的乾拌醬感。')).toBeInTheDocument()
+  })
+
+  test('lets users replace exclusive multi-select answers with concrete choices', async () => {
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '開始問卷' }))
+
+    await user.click(screen.getByRole('button', { name: /湯拉麵/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+    await user.click(screen.getByRole('button', { name: /白湯/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+    await user.click(screen.getByRole('button', { name: /醬油/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    const unsure = screen.getByRole('button', { name: /不確定/ })
+    await user.click(unsure)
+    expect(unsure).toHaveAttribute('aria-pressed', 'true')
+
+    const pork = screen.getByRole('button', { name: /^豬/ })
+    await user.click(pork)
+
+    expect(pork).toHaveAttribute('aria-pressed', 'true')
+    expect(unsure).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    expect(screen.getByRole('heading', { name: 'Q5. 你想要湯體多重口？' })).toBeInTheDocument()
   })
 })

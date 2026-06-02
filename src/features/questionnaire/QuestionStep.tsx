@@ -38,7 +38,9 @@ export function QuestionStep({
   const hasExclusiveSelected = selectedValues.some((value) =>
     exclusiveValues.includes(value),
   )
-  const selectionCapReached = selectedValues.length >= question.maxSelections
+  const selectionCapReached =
+    question.selectionType === 'multiple' &&
+    selectedValues.length >= question.maxSelections
 
   return (
     <section className="question-card">

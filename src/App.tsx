@@ -96,14 +96,14 @@ function readStoredState(): StoredState {
   }
 }
 
-function getSelectedValues(questionId: QuestionId, answers: UserAnswers) {
+function getSelectedValues(questionId: QuestionId, answers: UserAnswers): string[] {
   switch (questionId) {
     case 'source':
-      return answers.source
+      return [...answers.source]
     case 'signature':
-      return answers.signature
+      return [...answers.signature]
     case 'exclusions':
-      return answers.exclusions
+      return [...answers.exclusions]
     case 'form':
       return answers.form ? [answers.form] : []
     case 'archetype':
