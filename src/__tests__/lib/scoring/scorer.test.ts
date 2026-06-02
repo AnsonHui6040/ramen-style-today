@@ -89,6 +89,14 @@ describe('scoreQuestionnaire conflicts and filters', () => {
     expect(outcome.blockedLead?.blockedBy).toEqual(['pork'])
     expect(outcome.results.every((result) => result.style.id !== 'iekei')).toBe(true)
   })
+
+  test('fish allergy blocks fish-forward tsukemen without using a broad seafood bucket', () => {
+    const outcome = scoreQuestionnaire(conflictFixtures.fishBlockedKonbusui)
+
+    expect(outcome.blockedLead?.style.id).toBe('konbusui-tsukemen')
+    expect(outcome.blockedLead?.blockedBy).toEqual(['fish-seafood'])
+    expect(outcome.results.every((result) => result.blockedBy.length === 0)).toBe(true)
+  })
 })
 
 describe('answer normalization guards', () => {

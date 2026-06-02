@@ -3721,7 +3721,7 @@
     "family": "soup",
     "accent": "#4a6f79",
     "ingredients": [
-      "seafood"
+      "fish-seafood"
     ],
     "coreTypes": [
       {
@@ -4164,7 +4164,7 @@
     "family": "soup",
     "accent": "#3f7570",
     "ingredients": [
-      "seafood"
+      "shellfish"
     ],
     "coreTypes": [
       {
@@ -6641,7 +6641,7 @@
     "family": "tsukemen",
     "accent": "#3d747a",
     "ingredients": [
-      "seafood"
+      "fish-seafood"
     ],
     "coreTypes": [
       {
@@ -7087,7 +7087,7 @@
     "family": "tsukemen",
     "accent": "#2d5d75",
     "ingredients": [
-      "seafood"
+      "fish-seafood"
     ],
     "coreTypes": [
       {

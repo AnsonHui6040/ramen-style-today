@@ -182,6 +182,7 @@
 .result-card__summary,
 .support-list,
 .breakdown-note,
+.breakdown-score,
 .notice-card p {
   color: var(--muted);
 }
@@ -486,6 +487,15 @@
 
 .breakdown-answer {
   color: var(--ink-soft);
+}
+
+.breakdown-score {
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(141, 68, 34, 0.08);
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .alternative-section {

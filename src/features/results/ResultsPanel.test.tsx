@@ -26,6 +26,9 @@ describe('ResultsPanel', () => {
       'href',
       'https://iekei-yamatoya.com/menu',
     )
+    expect(screen.getAllByText('為什麼會推這碗？')[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/你剛剛選了/)[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/資料分 \+/)[0]).toBeInTheDocument()
   })
 
   test('renders the blocked-lead notice when exclusions remove a stronger match', () => {
@@ -40,8 +43,8 @@ describe('ResultsPanel', () => {
       />,
     )
 
-    expect(screen.getByText('有高分風格被硬過濾擋掉')).toBeInTheDocument()
-    expect(screen.getByText(/家系 原本分數也很高/)).toBeInTheDocument()
-    expect(screen.getByText(/排除了 豬/)).toBeInTheDocument()
+    expect(screen.getByText('有一碗本來很合，但被避開了')).toBeInTheDocument()
+    expect(screen.getByText(/家系 原本也很接近/)).toBeInTheDocument()
+    expect(screen.getByText(/標記了 豬/)).toBeInTheDocument()
   })
 })

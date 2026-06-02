@@ -37,6 +37,11 @@ describe('App questionnaire flow', () => {
     await user.click(screen.getByRole('button', { name: /海苔 \+ 菠菜/ }))
     await user.click(screen.getByRole('button', { name: '下一題' }))
 
+    expect(screen.getByRole('heading', { name: 'Q8. 有過敏或一定不吃的嗎？' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /魚 \/ 魚介/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /貝類/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /蝦蟹/ })).toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: /^無/ }))
     await user.click(screen.getByRole('button', { name: '看結果' }))
 
@@ -97,7 +102,7 @@ describe('App questionnaire flow', () => {
 
     await user.click(screen.getByRole('button', { name: 'EN' }))
 
-    expect(screen.getByRole('heading', { name: 'Find today’s ramen style in 8 questions' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'What bowl fits today?' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Start' }))
     await user.click(screen.getByRole('button', { name: /Tsukemen/ }))
@@ -119,13 +124,66 @@ describe('App questionnaire flow', () => {
 
     await user.click(screen.getByRole('button', { name: '開始問卷' }))
 
-    await user.click(screen.getByRole('button', { name: /拌麵 \/ 油そば/ }))
+    await user.click(screen.getByRole('button', { name: /乾拌麵 \/ 油拌麵/ }))
     await user.click(screen.getByRole('button', { name: '下一題' }))
-    await user.click(screen.getByRole('button', { name: /台灣まぜそば/ }))
+    await user.click(screen.getByRole('button', { name: /台灣拌麵（台灣まぜそば）/ }))
     await user.click(screen.getByRole('button', { name: '下一題' }))
 
     expect(screen.getByRole('heading', { name: 'Q3. 拌醬調味想偏哪邊？' })).toBeInTheDocument()
     expect(screen.getByText('這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的乾拌醬感。')).toBeInTheDocument()
+  })
+
+  test('prunes dry tare options after Taiwan mazesoba is selected', async () => {
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '開始問卷' }))
+
+    await user.click(screen.getByRole('button', { name: /乾拌麵 \/ 油拌麵/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+    await user.click(screen.getByRole('button', { name: /台灣拌麵（台灣まぜそば）/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    expect(screen.getByRole('heading', { name: 'Q3. 拌醬調味想偏哪邊？' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /辣味 \/ 芝麻/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /醬油/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /味噌/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /鹽味/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /原味/ })).not.toBeInTheDocument()
+  })
+
+  test('auto-skips fixed tare after soupless tantanmen is selected', async () => {
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '開始問卷' }))
+
+    await user.click(screen.getByRole('button', { name: /乾拌麵 \/ 油拌麵/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+    await user.click(screen.getByRole('button', { name: /無湯擔擔麵（汁なし担々）/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    expect(await screen.findByRole('heading', { name: 'Q4. 你想讓哪種香氣或主角最明顯？' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /醬油/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /味噌/ })).not.toBeInTheDocument()
+  })
+
+  test('auto-skips fixed tare after rich miso tsukemen is selected', async () => {
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '開始問卷' }))
+
+    await user.click(screen.getByRole('button', { name: /沾麵/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+    await user.click(screen.getByRole('button', { name: /濃厚味噌/ }))
+    await user.click(screen.getByRole('button', { name: '下一題' }))
+
+    expect(await screen.findByRole('heading', { name: 'Q4. 你想讓沾汁或昆布水的哪種主角最明顯？' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Q3. 沾汁調味想偏哪邊？' })).not.toBeInTheDocument()
   })
 
   test('lets users replace exclusive multi-select answers with concrete choices', async () => {

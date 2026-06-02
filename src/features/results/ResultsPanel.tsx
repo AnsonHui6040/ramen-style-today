@@ -219,10 +219,15 @@ export function ResultsPanel({
                       {localizeQuestionTitle(item.questionId, item.questionLabel, locale)}
                     </span>
                     <span className="breakdown-answer">
-                      {localizeAnswerLabel(item.questionId, item.answerValues, item.answerLabel, locale)}
+                      {dictionary.results.answerPhrase(
+                        localizeAnswerLabel(item.questionId, item.answerValues, item.answerLabel, locale),
+                      )}
                     </span>
                     <span className="breakdown-note">
-                      {dictionary.results.tierNotes[item.tier]} +{item.points}
+                      {dictionary.results.tierNotes[item.tier]}
+                    </span>
+                    <span className="breakdown-score">
+                      {dictionary.results.scoreLabel(item.points)}
                     </span>
                   </li>
                 ))}

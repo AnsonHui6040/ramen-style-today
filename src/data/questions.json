@@ -20,8 +20,8 @@
       },
       {
         "value": "dry",
-        "label": "拌麵 / 油そば",
-        "description": "幾乎沒有湯，重點是油香、拌醬或辣麻。"
+        "label": "乾拌麵 / 油拌麵",
+        "description": "幾乎沒有湯，重點是油香、拌醬、辣麻或台灣拌麵感。"
       }
     ]
   },
@@ -71,17 +71,17 @@
       "dry": [
         {
           "value": "aburasoba",
-          "label": "油そば",
+          "label": "油拌麵（油そば）",
           "description": "重點在油香與醬香，不是辣麻主導。"
         },
         {
           "value": "taiwan-mazesoba",
-          "label": "台灣まぜそば",
+          "label": "台灣拌麵（台灣まぜそば）",
           "description": "肉燥、蒜、辛香與濃拌感更強。"
         },
         {
           "value": "soupless-tantan",
-          "label": "汁なし担々",
+          "label": "無湯擔擔麵（汁なし担々）",
           "description": "偏辣麻與芝麻，香氣走擔擔麵支線。"
         },
         {
@@ -412,11 +412,11 @@
   },
   {
     "id": "exclusions",
-    "title": "Q8. 有不吃的嗎？",
-    "description": "這題只做硬過濾，不會參與計分。",
+    "title": "Q8. 有過敏或一定不吃的嗎？",
+    "description": "這題只用來避開不能吃的食材，不會拿來幫任何風格加分。",
     "selectionType": "multiple",
     "minSelections": 1,
-    "maxSelections": 6,
+    "maxSelections": 8,
     "weight": 0,
     "options": [
       {
@@ -440,9 +440,19 @@
         "description": "排除牛骨與牛香路線。"
       },
       {
-        "value": "seafood",
-        "label": "海鮮",
-        "description": "排除魚介、貝類與甲殼風味。"
+        "value": "fish-seafood",
+        "label": "魚 / 魚介",
+        "description": "排除魚乾、節、煮干、魚粉與魚介出汁。"
+      },
+      {
+        "value": "shellfish",
+        "label": "貝類",
+        "description": "排除蜆、蛤、貝出汁等貝類鮮味。"
+      },
+      {
+        "value": "shrimp-crab",
+        "label": "蝦蟹",
+        "description": "排除蝦油、蟹味、甲殼類鮮味。"
       },
       {
         "value": "dairy",

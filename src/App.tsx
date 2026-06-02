@@ -4,6 +4,7 @@ import { questionBank, resolveQuestionOptions } from './config/questions'
 import { QuestionStep } from './features/questionnaire/QuestionStep'
 import { ResultsPanel } from './features/results/ResultsPanel'
 import { toCompletedAnswers } from './domain/schema'
+import { exclusionValues } from './domain/types'
 import type {
   QuestionId,
   ScoringOutcome,
@@ -52,6 +53,29 @@ function getStorage() {
   }
 }
 
+function restoreExclusions(values: unknown): UserAnswers['exclusions'] {
+  if (!Array.isArray(values) || !values.length) {
+    return ['none']
+  }
+
+  const migratedValues = values.flatMap((value) =>
+    value === 'seafood'
+      ? ['fish-seafood', 'shellfish', 'shrimp-crab']
+      : [value],
+  )
+  const validValues = migratedValues.filter((value): value is UserAnswers['exclusions'][number] =>
+    exclusionValues.includes(value as UserAnswers['exclusions'][number]),
+  )
+
+  if (!validValues.length) {
+    return ['none']
+  }
+
+  return validValues.includes('none') && validValues.length > 1
+    ? validValues.filter((value) => value !== 'none')
+    : validValues
+}
+
 function readStoredState(): StoredState {
   const fallback: StoredState = {
     phase: 'intro',
@@ -74,7 +98,7 @@ function readStoredState(): StoredState {
 
     const parsed = JSON.parse(raw) as Partial<StoredState>
 
-    return {
+    const restoredState: StoredState = {
       phase: parsed.phase === 'questions' || parsed.phase === 'results' ? parsed.phase : 'intro',
       stepIndex:
         typeof parsed.stepIndex === 'number' && parsed.stepIndex >= 0
@@ -86,10 +110,22 @@ function readStoredState(): StoredState {
         ...parsed.answers,
         source: parsed.answers?.source ?? [],
         signature: parsed.answers?.signature ?? [],
-        exclusions: parsed.answers?.exclusions?.length
-          ? parsed.answers.exclusions
-          : ['none'],
+        exclusions: restoreExclusions(parsed.answers?.exclusions),
       },
+    }
+
+    if (restoredState.phase !== 'questions') {
+      return restoredState
+    }
+
+    const normalizedState = applyForcedAnswersFromStep(
+      restoredState.answers,
+      Math.min(restoredState.stepIndex, questionBank.length - 1),
+    )
+
+    return {
+      ...restoredState,
+      ...normalizedState,
     }
   } catch {
     return fallback
@@ -123,6 +159,109 @@ function hasMeaningfulAnswer(questionId: QuestionId, values: string[]) {
   }
 
   return values.length > 0
+}
+
+function resetPreferenceAnswers(answers: UserAnswers): UserAnswers {
+  return {
+    ...answers,
+    tare: undefined,
+    source: [],
+    body: undefined,
+    noodle: undefined,
+    signature: [],
+  }
+}
+
+function writeForcedQuestionValue(
+  answers: UserAnswers,
+  questionId: QuestionId,
+  value: string,
+): UserAnswers {
+  switch (questionId) {
+    case 'form':
+      return resetPreferenceAnswers({
+        ...answers,
+        form: value as UserAnswers['form'],
+        archetype: undefined,
+      })
+    case 'archetype':
+      return resetPreferenceAnswers({
+        ...answers,
+        archetype: value as UserAnswers['archetype'],
+      })
+    case 'tare':
+      return { ...answers, tare: value as UserAnswers['tare'] }
+    case 'source':
+      return { ...answers, source: [value] as UserAnswers['source'] }
+    case 'body':
+      return { ...answers, body: value as UserAnswers['body'] }
+    case 'noodle':
+      return { ...answers, noodle: value as UserAnswers['noodle'] }
+    case 'signature':
+      return { ...answers, signature: [value] as UserAnswers['signature'] }
+    case 'exclusions':
+      return { ...answers, exclusions: [value] as UserAnswers['exclusions'] }
+  }
+}
+
+function getForcedQuestionValue(stepIndex: number, answers: UserAnswers) {
+  if (stepIndex <= 1 || stepIndex >= questionBank.length - 1) {
+    return undefined
+  }
+
+  const question = questionBank[stepIndex]
+
+  if (!question) {
+    return undefined
+  }
+
+  const options = resolveQuestionOptions(
+    question,
+    answers.form,
+    answers.archetype,
+  )
+  const [onlyOption] = options
+
+  return options.length === 1 ? onlyOption?.value : undefined
+}
+
+function applyForcedAnswersFromStep(
+  answers: UserAnswers,
+  stepIndex: number,
+) {
+  let nextAnswers = answers
+  let nextStepIndex = stepIndex
+
+  while (nextStepIndex < questionBank.length) {
+    const question = questionBank[nextStepIndex]
+    const forcedValue = getForcedQuestionValue(nextStepIndex, nextAnswers)
+
+    if (!question || !forcedValue) {
+      break
+    }
+
+    nextAnswers = writeForcedQuestionValue(
+      nextAnswers,
+      question.id,
+      forcedValue,
+    )
+    nextStepIndex += 1
+  }
+
+  return {
+    answers: nextAnswers,
+    stepIndex: Math.min(nextStepIndex, questionBank.length - 1),
+  }
+}
+
+function getPreviousInteractiveStep(stepIndex: number, answers: UserAnswers) {
+  let previousStepIndex = Math.max(0, stepIndex - 1)
+
+  while (previousStepIndex > 1 && getForcedQuestionValue(previousStepIndex, answers)) {
+    previousStepIndex -= 1
+  }
+
+  return previousStepIndex
 }
 
 function App() {
@@ -159,8 +298,9 @@ function App() {
 
   const currentQuestion = questionBank[stepIndex]
   const currentOptions = currentQuestion
-    ? resolveQuestionOptions(currentQuestion, answers.form)
+    ? resolveQuestionOptions(currentQuestion, answers.form, answers.archetype)
     : []
+  const currentOptionValues = new Set(currentOptions.map((option) => option.value))
   const currentQuestionView = currentQuestion
     ? localizeQuestion(currentQuestion, locale, answers.form)
     : null
@@ -170,7 +310,9 @@ function App() {
     )
     : []
   const selectedValues = currentQuestion
-    ? getSelectedValues(currentQuestion.id, answers)
+    ? getSelectedValues(currentQuestion.id, answers).filter((value) =>
+      currentOptionValues.has(value),
+    )
     : []
   const canContinue =
     currentQuestion &&
@@ -183,19 +325,24 @@ function App() {
 
       switch (questionId) {
         case 'form':
-          next.form = value as UserAnswers['form']
-          if (
-            previous.archetype &&
-            !resolveQuestionOptions(questionBank[1], next.form).some(
-              (option) => option.value === previous.archetype,
-            )
-          ) {
-            next.archetype = undefined
+          if (previous.form === value) {
+            return previous
           }
-          return next
+
+          return resetPreferenceAnswers({
+            ...next,
+            form: value as UserAnswers['form'],
+            archetype: undefined,
+          })
         case 'archetype':
-          next.archetype = value as UserAnswers['archetype']
-          return next
+          if (previous.archetype === value) {
+            return previous
+          }
+
+          return resetPreferenceAnswers({
+            ...next,
+            archetype: value as UserAnswers['archetype'],
+          })
         case 'tare':
           next.tare = value as UserAnswers['tare']
           return next
@@ -216,14 +363,21 @@ function App() {
       return
     }
 
-    const options = resolveQuestionOptions(currentQuestion, answers.form)
+    const options = resolveQuestionOptions(
+      currentQuestion,
+      answers.form,
+      answers.archetype,
+    )
+    const allowedValues = options.map((option) => option.value)
     const exclusiveValues = options
       .filter((option) => option.exclusive)
       .map((option) => option.value)
     const isExclusive = exclusiveValues.includes(value)
 
     setAnswers((previous) => {
-      const currentValues = getSelectedValues(questionId, previous)
+      const currentValues = getSelectedValues(questionId, previous).filter(
+        (candidate) => allowedValues.includes(candidate),
+      )
 
       if (isExclusive) {
         if (questionId === 'source') {
@@ -300,7 +454,13 @@ function App() {
       return
     }
 
-    setStepIndex((previous) => previous + 1)
+    const nextState = applyForcedAnswersFromStep(answers, stepIndex + 1)
+
+    if (nextState.answers !== answers) {
+      setAnswers(nextState.answers)
+    }
+
+    setStepIndex(nextState.stepIndex)
   }
 
   function handleBack() {
@@ -309,7 +469,7 @@ function App() {
       return
     }
 
-    setStepIndex((previous) => Math.max(0, previous - 1))
+    setStepIndex((previous) => getPreviousInteractiveStep(previous, answers))
   }
 
   function startFlow() {
@@ -384,7 +544,7 @@ function App() {
                 <span>{dictionary.app.statSaved}</span>
               </div>
               <div>
-                <strong>100</strong>
+                <strong>{dictionary.app.statWeightValue}</strong>
                 <span>{dictionary.app.statWeight}</span>
               </div>
             </div>

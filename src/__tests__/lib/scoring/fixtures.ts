@@ -77,6 +77,10 @@ export const conflictFixtures = {
     ...canonicalFixtures.iekei,
     exclusions: ['pork'],
   }),
+  fishBlockedKonbusui: complete({
+    ...canonicalFixtures.konbusui,
+    exclusions: ['fish-seafood'],
+  }),
 } satisfies Record<string, CompletedAnswers>
 
 export const normalizationFixture: UserAnswers = {

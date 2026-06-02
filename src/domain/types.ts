@@ -60,7 +60,9 @@ export const exclusionValues = [
   'chicken',
   'duck',
   'beef',
-  'seafood',
+  'fish-seafood',
+  'shellfish',
+  'shrimp-crab',
   'dairy',
   'none',
 ] as const

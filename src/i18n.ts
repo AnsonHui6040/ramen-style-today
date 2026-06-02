@@ -39,6 +39,7 @@ type Dictionary = {
     statSteps: string
     statSaved: string
     statWeight: string
+    statWeightValue: string
     implementedTitle: string
     implemented: string[]
     start: string
@@ -72,6 +73,8 @@ type Dictionary = {
     bonus: string
     penalty: string
     why: string
+    answerPhrase: (answer: string) => string
+    scoreLabel: (points: number) => string
     nearbyEyebrow: string
     nearbyTitle: string
     nearbyBody: string
@@ -89,27 +92,28 @@ export const dictionaries: Record<Locale, Dictionary> = {
   'zh-TW': {
     localeLabel: '繁中',
     app: {
-      headline: '用 8 題找出今天該吃的拉麵風格',
-      lede: '這是第一版實作：問卷、規則與結果說明都已落地，先聚焦在風格分類與可解釋推薦。',
-      pills: ['18 個前台風格', '同形式主推薦', 'Q8 硬過濾'],
-      introTitle: '先分形式，再用調味、主出汁、濃淡、麵型與標誌元素收斂。',
-      introBody: '這版已把你提供的 8 題結構、權重與代表性衝突規則做進前端規則引擎，回答完成就能直接看到主推薦與理由。',
-      statSteps: '實際作答步數',
-      statSaved: '已暫存答案',
-      statWeight: '總權重',
-      implementedTitle: '目前已實作',
+      headline: '今天想吃哪一碗？',
+      lede: '先選湯、沾或拌，再用口味、濃淡和麵感慢慢縮小範圍，最後給你一碗最像今天心情的選擇。',
+      pills: ['先選形式', '避開不吃的', '看得懂理由'],
+      introTitle: '不用想太多，照著今天的胃口選就好。',
+      introBody: '想清爽、想濃、想要魚介、想要辣麻，答案會一路收斂到適合的拉麵、沾麵或拌麵。',
+      statSteps: '題就有結果',
+      statSaved: '已選答案',
+      statWeight: '結果理由',
+      statWeightValue: '可回看',
+      implementedTitle: '這裡會幫你做的事',
       implemented: [
-        'Q1 驅動 Q2 分支與結果主分流',
-        '18 個風格的初版規則庫',
-        '加分、扣分、硬過濾與低信心提示',
-        '本機暫存，重新整理不會遺失進度',
+        '湯拉麵、沾麵、乾拌 / 油拌不混在一起推薦',
+        '依你選的細分類刪掉不相關問題',
+        '過敏或不吃的食材會先避開',
+        '重新整理後還能接著選',
       ],
       start: '開始問卷',
       continue: '繼續作答',
       clear: '清除暫存',
     },
     questionUi: {
-      step: (current, total) => `Step ${current} / ${total}`,
+      step: (current, total) => `第 ${current} / ${total} 題`,
       multipleMeta: (max, current) => `可選 ${max} 個，目前 ${current} 個`,
       singleMeta: '單選題',
       back: '上一步',
@@ -117,33 +121,35 @@ export const dictionaries: Record<Locale, Dictionary> = {
       results: '看結果',
     },
     results: {
-      topMatch: 'Top Match',
+      topMatch: '今天最像這碗',
       eatToday: (style) => `今天先吃 ${style}`,
       confidence: '信心分數',
-      descriptor: '組合結果',
-      lowConfidenceTitle: '這次結果偏探索型',
-      lowConfidenceBody: '第一名和第二名距離不大，代表你的答案跨了兩條以上的風格線。',
-      blockedTitle: '有高分風格被硬過濾擋掉',
+      descriptor: '口味輪廓',
+      lowConfidenceTitle: '這次有點像在兩種風格中間',
+      lowConfidenceBody: '第一名和第二名距離不大，代表你的答案同時靠近兩條口味線。',
+      blockedTitle: '有一碗本來很合，但被避開了',
       blockedBody: (style, blocked) =>
-        `${style} 原本分數也很高，但因為排除了 ${blocked}，所以沒有出現在正式推薦裡。`,
+        `${style} 原本也很接近，但你標記了 ${blocked}，所以沒有放進正式推薦。`,
       adjust: '調整答案',
       restart: '重新開始',
       noResultsTitle: '沒有可顯示的結果',
-      noResultsBody: '目前所有高分風格都被硬過濾擋掉了，請回去調整 Q8 或其他訊號。',
+      noResultsBody: '目前比較接近的風格都碰到你不吃的項目，可以回去調整過敏 / 不吃設定或其他口味選項。',
       catalogTitle: '推薦店家 / 品項',
       officialPage: '官方頁面',
       catalogEmpty: '這個結果已經有風格判斷，但目前還沒掛上對應店家資料。',
       bonus: '加分',
       penalty: '扣分',
-      why: '為什麼是這一碗',
+      why: '為什麼會推這碗？',
+      answerPhrase: (answer) => `你剛剛選了「${answer}」`,
+      scoreLabel: (points) => `資料分 +${points}`,
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: '相近替代',
       nearbyBody: '這些風格分數也接近，但形式和你一開始選的不同，所以不放進主推薦。',
       tierNotes: {
-        exact: '核心訊號對上。',
-        adjacent: '方向接近，但不是最典型。',
-        partial: '只命中部分線索。',
-        miss: '這題和該風格距離較遠。',
+        exact: '這個選擇很貼近這碗的個性。',
+        adjacent: '方向是接近的，只是沒有那麼典型。',
+        partial: '有一部分對上，所以給一點參考分。',
+        miss: '這題和這碗比較不像，分數就保守一點。',
       },
     },
     questions: {} as Record<QuestionId, QuestionCopy>,
@@ -172,20 +178,21 @@ export const dictionaries: Record<Locale, Dictionary> = {
   en: {
     localeLabel: 'EN',
     app: {
-      headline: 'Find today’s ramen style in 8 questions',
-      lede: 'This MVP focuses on style classification, explainable scoring, and recommendations that respect the format you choose first.',
-      pills: ['18 display styles', 'Same-format main picks', 'Q8 hard filters'],
-      introTitle: 'Start with format, then narrow by tare, source, body, noodles, and signature cues.',
-      introBody: 'The questionnaire, weights, conflict rules, and explanations are implemented in the front-end rules engine.',
-      statSteps: 'answer steps',
+      headline: 'What bowl fits today?',
+      lede: 'Pick soup, dipping, or mixed noodles first, then narrow by flavor, weight, and noodle feel.',
+      pills: ['Pick a format', 'Avoid allergens', 'Readable reasons'],
+      introTitle: 'Answer by appetite, not by ramen theory.',
+      introBody: 'Clean, rich, gyokai, spicy-sesame, chewy, light: each answer narrows the bowl without mixing formats.',
+      statSteps: 'questions',
       statSaved: 'saved answers',
-      statWeight: 'total weight',
-      implementedTitle: 'Implemented',
+      statWeight: 'result reasons',
+      statWeightValue: 'reviewable',
+      implementedTitle: 'What it does',
       implemented: [
-        'Q1 drives Q2 branches and main result format',
-        'Initial rules for 18 display styles',
-        'Bonuses, penalties, hard filters, and low-confidence notices',
-        'Local progress saving across refreshes',
+        'Keeps ramen, tsukemen, and dry styles separate',
+        'Removes irrelevant follow-up choices after subtype selection',
+        'Avoids ingredients you cannot eat',
+        'Saves progress across refreshes',
       ],
       start: 'Start',
       continue: 'Continue',
@@ -219,6 +226,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
       bonus: 'Bonus',
       penalty: 'Penalty',
       why: 'Why this bowl',
+      answerPhrase: (answer) => `You chose “${answer}”`,
+      scoreLabel: (points) => `data score +${points}`,
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: 'Nearby alternatives',
       nearbyBody: 'These styles also scored well, but their format differs from your first choice.',
@@ -315,8 +324,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
         description: 'Choose up to two to tune Iekei, Sapporo, Jiro, gyokai, and citrus-leaning styles.',
       },
       exclusions: {
-        title: 'Q8. Anything you do not eat?',
-        description: 'This only applies hard filters and does not add score.',
+        title: 'Q8. Any allergies or strict no-go ingredients?',
+        description: 'This only avoids ingredients you cannot eat; it does not add score to any style.',
       },
     },
     options: {},
@@ -344,20 +353,21 @@ export const dictionaries: Record<Locale, Dictionary> = {
   ja: {
     localeLabel: '日本語',
     app: {
-      headline: '8問で今日食べたいラーメンスタイルを見つける',
-      lede: 'このMVPは、最初に選んだ提供形式を尊重しながら、スタイル分類と説明可能な推薦に集中します。',
-      pills: ['18種類の表示スタイル', '同じ形式を主推薦', 'Q8はハードフィルター'],
-      introTitle: 'まず提供形式を分け、タレ、主素材、濃度、麺、特徴で絞り込みます。',
-      introBody: '8問構成、重み、代表的な衝突ルール、説明表示をフロントエンドのルールエンジンに実装しています。',
-      statSteps: '回答ステップ',
+      headline: '今日はどの一杯にする？',
+      lede: '汁あり、つけ麺、汁なしを先に選び、味、濃さ、麺の感覚で今日の一杯に近づけます。',
+      pills: ['形式から選ぶ', '苦手を避ける', '理由が読める'],
+      introTitle: 'ラーメン知識より、今日の気分で選んでください。',
+      introBody: 'あっさり、濃厚、魚介、辛味胡麻、もっちり麺など、回答に合わせて候補を絞ります。',
+      statSteps: '質問',
       statSaved: '保存済み回答',
-      statWeight: '総重み',
-      implementedTitle: '実装済み',
+      statWeight: '結果理由',
+      statWeightValue: '確認可',
+      implementedTitle: 'できること',
       implemented: [
-        'Q1でQ2分岐と主推薦形式を決定',
-        '18種類の表示スタイルの初期ルール',
-        '加点、減点、ハードフィルター、低信頼度表示',
-        'ローカル保存で再読み込み後も進行状況を保持',
+        '汁あり、つけ麺、汁なしを分けて推薦',
+        '細分類に合わせて不要な選択肢を削除',
+        '食べられない食材を避ける',
+        '再読み込み後も続きから回答',
       ],
       start: '診断を始める',
       continue: '続きから回答',
@@ -391,6 +401,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
       bonus: '加点',
       penalty: '減点',
       why: 'この一杯になる理由',
+      answerPhrase: (answer) => `選んだ回答は「${answer}」`,
+      scoreLabel: (points) => `データ点 +${points}`,
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: '近い代替案',
       nearbyBody: 'これらも高得点ですが、最初に選んだ提供形式と異なるため主推薦には入れていません。',
@@ -487,8 +499,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
         description: '2つまで選択できます。家系、札幌、二郎、魚介、柑橘系を微調整します。',
       },
       exclusions: {
-        title: 'Q8. 食べないものはありますか？',
-        description: 'この質問はハードフィルターだけに使い、加点には使いません。',
+        title: 'Q8. アレルギーや絶対に避けたい食材はありますか？',
+        description: '食べられない食材を避けるためだけに使い、どのスタイルにも加点しません。',
       },
     },
     options: {},
@@ -580,7 +592,9 @@ const optionTranslations = {
       chicken: ['Chicken', 'Exclude chicken stock, chicken paitan, and chicken fat.'],
       duck: ['Duck', 'Exclude duck chintan, duck paitan, and duck oil.'],
       beef: ['Beef', 'Exclude beef-bone and beef-forward styles.'],
-      seafood: ['Seafood', 'Exclude gyokai, shellfish, and crustacean flavors.'],
+      'fish-seafood': ['Fish / gyokai', 'Exclude dried fish, bonito, niboshi, fish powder, and gyokai stock.'],
+      shellfish: ['Shellfish', 'Exclude clam, shijimi, and shellfish-dashi flavors.'],
+      'shrimp-crab': ['Shrimp / crab', 'Exclude shrimp oil, crab notes, and crustacean flavors.'],
       dairy: ['Dairy', 'Exclude butter or dairy-based elements.'],
       none: ['None', 'No hard exclusion.'],
     },
@@ -649,7 +663,9 @@ const optionTranslations = {
       chicken: ['鶏', '鶏スープ、鶏白湯、鶏脂を除外。'],
       duck: ['鴨', '鴨清湯、鴨白湯、鴨油を除外。'],
       beef: ['牛', '牛骨、牛の香りが強い系統を除外。'],
-      seafood: ['海鮮', '魚介、貝類、甲殻類の風味を除外。'],
+      'fish-seafood': ['魚 / 魚介', '煮干し、節、魚粉、魚介出汁を除外。'],
+      shellfish: ['貝類', 'しじみ、あさり、貝出汁などを除外。'],
+      'shrimp-crab': ['エビ / カニ', 'エビ油、カニ風味、甲殻類の旨味を除外。'],
       dairy: ['乳製品', 'バターや乳製品系の要素を除外。'],
       none: ['なし', 'ハードな除外はありません。'],
     },
@@ -793,8 +809,8 @@ const catalogTranslations: Record<Locale, {
     stores: {
       'ippudo-japan': ['一風堂', '日本全國展店', '以博多豚骨為主軸，提供白丸元味、赤丸新味與からか麺等豚骨系品項。'],
       'yamatoya-japan': ['横浜家系ラーメン大和家', '日本全國展店', '以豚骨醬油湯與中太麵為招牌，也提供 631 拉麵與魚介沾麵的家系連鎖店。'],
-      'tokyo-aburagumi': ['東京油組総本店', '日本全國展店', '以老舖製麵所背景、自家製麵與秘傳醬汁為主打的油そば專門店。'],
-      'menya-hanabi': ['麺屋はなび', '名古屋本店 / 海外展店', '台灣まぜそば發祥店，以極太麵搭配台灣肉味噌的汁なし麵為招牌。'],
+      'tokyo-aburagumi': ['東京油組総本店', '日本全國展店', '以老舖製麵所背景、自家製麵與秘傳醬汁為主打的油拌麵專門店。'],
+      'menya-hanabi': ['麺屋はなび', '名古屋本店 / 海外展店', '台灣拌麵（台灣まぜそば）發祥店，以極太麵搭配台灣肉味噌的無湯乾拌麵為招牌。'],
       'chukasoba-tomita': ['中華蕎麦とみ田', '千葉縣松戶市', '以超濃厚豚骨魚介湯與自家製極太麵聞名的松戶沾麵名店。'],
     },
     items: {
@@ -803,9 +819,9 @@ const catalogTranslations: Record<Locale, {
       'yamatoya-631-ramen': ['631ラーメン 醤油', '凸顯豚骨醬油湯與中太麵的大和家招牌拉麵。'],
       'yamatoya-ramen-shoyu': ['ラーメン 醤油', '以豚骨醬油湯與中太麵為核心、較標準取向的家系拉麵。'],
       'yamatoya-tsukemen-gyokai': ['つけ麺 魚介', '以魚介風味沾汁食用的沾麵線，作為偏魚介沾麵的探索品項。'],
-      'aburagumi-aburasoba': ['油そば', '使用濃厚特製醬汁的東京油組総本店定番油そば。'],
-      'aburagumi-karamiso-aburasoba': ['辛味噌油そば', '以微辣辛味拉出風味、整體更重口的油そば。'],
-      'hanabi-taiwan-mazesoba': ['台湾まぜそば', '將辣椒與大蒜風味的醬油台灣肉味噌鋪在極太麵上的元祖汁なし麵。'],
+      'aburagumi-aburasoba': ['油拌麵（油そば）', '使用濃厚特製醬汁的東京油組総本店定番油拌麵。'],
+      'aburagumi-karamiso-aburasoba': ['辛味噌油拌麵', '以微辣辛味拉出風味、整體更重口的油拌麵。'],
+      'hanabi-taiwan-mazesoba': ['台灣拌麵（台湾まぜそば）', '將辣椒與大蒜風味的醬油台灣肉味噌鋪在極太麵上的元祖無湯乾拌麵。'],
       'tomita-tsukemen': ['つけ麺', '以超濃厚豚骨魚介湯與獨特自家製極太麵構成的とみ田代表品項。'],
     },
   },
@@ -920,10 +936,12 @@ export function localizeAnswerLabel(
   locale: Locale,
 ) {
   const labels = values.map((value) =>
-    dictionaries[locale].options[questionId]?.[value]?.label ?? value,
+    dictionaries[locale].options[questionId]?.[value]?.label,
   )
 
-  return labels.length ? labels.join(' / ') : fallback
+  return labels.length && labels.every(Boolean)
+    ? labels.join(' / ')
+    : fallback
 }
 
 export function localizeStyle(
