@@ -13,6 +13,7 @@ describe('ResultsPanel', () => {
     render(
       <ResultsPanel
         outcome={outcome}
+        locale="zh-TW"
         onRestart={vi.fn()}
         onReviewAnswers={vi.fn()}
       />,
@@ -33,6 +34,7 @@ describe('ResultsPanel', () => {
     render(
       <ResultsPanel
         outcome={outcome}
+        locale="zh-TW"
         onRestart={vi.fn()}
         onReviewAnswers={vi.fn()}
       />,

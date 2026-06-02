@@ -102,13 +102,20 @@ export interface ChoiceOption<Value extends string = string> {
   value: Value
   label: string
   description: string
+  descriptionByForm?: Partial<Record<FormOption, string>>
   exclusive?: boolean
+}
+
+export interface QuestionCopy {
+  title: string
+  description: string
 }
 
 export interface QuestionDefinition<Id extends QuestionId = QuestionId> {
   id: Id
   title: string
   description: string
+  copyByForm?: Partial<Record<FormOption, QuestionCopy>>
   selectionType: 'single' | 'multiple'
   minSelections: number
   maxSelections: number
@@ -198,6 +205,7 @@ export type MatchTier = 'exact' | 'adjacent' | 'partial' | 'miss'
 export interface BreakdownItem {
   questionId: ScoredQuestionId
   questionLabel: string
+  answerValues: readonly string[]
   answerLabel: string
   tier: MatchTier
   points: number
@@ -221,6 +229,7 @@ export interface RankedStyle {
 
 export interface ScoringOutcome {
   results: RankedStyle[]
+  alternativeResults: RankedStyle[]
   blockedLead: RankedStyle | null
   lowConfidence: boolean
 }

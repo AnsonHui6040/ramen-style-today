@@ -38,6 +38,9 @@ describe('scoreQuestionnaire canonical pathways', () => {
     const outcome = scoreQuestionnaire(canonicalFixtures.konbusui)
 
     expect(outcome.results[0]?.style.id).toBe('konbusui-tsukemen')
+    expect(outcome.results.every((result) => result.style.family === 'tsukemen')).toBe(true)
+    expect(outcome.results).toHaveLength(2)
+    expect(outcome.alternativeResults.every((result) => result.style.family !== 'tsukemen')).toBe(true)
     expect(outcome.results[0]?.bonusReasons).toEqual(
       expect.arrayContaining(['昆布水沾麵輪廓完整 +4']),
     )
@@ -47,6 +50,8 @@ describe('scoreQuestionnaire canonical pathways', () => {
     const outcome = scoreQuestionnaire(canonicalFixtures.taiwanMazesoba)
 
     expect(outcome.results[0]?.style.id).toBe('taiwan-mazesoba')
+    expect(outcome.results.every((result) => result.style.family === 'dry')).toBe(true)
+    expect(outcome.alternativeResults.every((result) => result.style.family !== 'dry')).toBe(true)
   })
 })
 

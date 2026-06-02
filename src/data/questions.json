@@ -96,6 +96,20 @@
     "id": "tare",
     "title": "Q3. 主要調味想偏哪邊？",
     "description": "這題對 shoyu / shio / miso / 辣麻支線辨識力很高。",
+    "copyByForm": {
+      "soup": {
+        "title": "Q3. 湯底調味想偏哪邊？",
+        "description": "這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的湯拉麵。"
+      },
+      "tsukemen": {
+        "title": "Q3. 沾汁調味想偏哪邊？",
+        "description": "這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的沾汁。"
+      },
+      "dry": {
+        "title": "Q3. 拌醬調味想偏哪邊？",
+        "description": "這題用來區分醬油、鹽味、味噌、辣麻或不強調調味的乾拌醬感。"
+      }
+    },
     "selectionType": "single",
     "minSelections": 1,
     "maxSelections": 1,
@@ -109,7 +123,12 @@
       {
         "value": "shio",
         "label": "鹽味",
-        "description": "想讓湯底或出汁輪廓更直接。"
+        "description": "想讓湯底或出汁輪廓更直接。",
+        "descriptionByForm": {
+          "soup": "想讓湯底或出汁輪廓更直接。",
+          "tsukemen": "想讓沾汁或昆布水的鮮味更直接。",
+          "dry": "想讓拌醬的鹹鮮與主角風味更直接。"
+        }
       },
       {
         "value": "miso",
@@ -124,7 +143,12 @@
       {
         "value": "none",
         "label": "原味 / 不強調",
-        "description": "不是清淡，而是讓主湯或主角自己說話。"
+        "description": "不是清淡，而是讓主湯或主角自己說話。",
+        "descriptionByForm": {
+          "soup": "不是清淡，而是讓主湯或主角自己說話。",
+          "tsukemen": "不是清淡，而是讓沾汁或麵體本身更突出。",
+          "dry": "不是清淡，而是讓油香、醬香或配料主角更突出。"
+        }
       }
     ]
   },
@@ -132,6 +156,20 @@
     "id": "source",
     "title": "Q4. 你想讓哪種出汁或主角最明顯？",
     "description": "最多選 2 個，這一題用來切豚骨、雞、鴨、魚介、貝等主線。",
+    "copyByForm": {
+      "soup": {
+        "title": "Q4. 你想讓哪種出汁或主角最明顯？",
+        "description": "最多選 2 個，這一題用來切豚骨、雞、鴨、魚介、貝等湯底主線。"
+      },
+      "tsukemen": {
+        "title": "Q4. 你想讓沾汁或昆布水的哪種主角最明顯？",
+        "description": "最多選 2 個，這一題用來切魚介、昆布、豚骨、雞白湯、味噌等沾麵主線。"
+      },
+      "dry": {
+        "title": "Q4. 你想讓哪種香氣或主角最明顯？",
+        "description": "最多選 2 個，這一題用來切豬油、肉燥、魚粉、辣麻、蒜香或蔬菜等乾拌主線。"
+      }
+    },
     "selectionType": "multiple",
     "minSelections": 1,
     "maxSelections": 2,
@@ -140,17 +178,32 @@
       {
         "value": "pork",
         "label": "豬",
-        "description": "豚骨、叉燒脂香、豬油感。"
+        "description": "豚骨、叉燒脂香、豬油感。",
+        "descriptionByForm": {
+          "soup": "豚骨、叉燒脂香、豬油感。",
+          "tsukemen": "豚骨魚介沾汁、叉燒脂香或濃厚豬系沾汁。",
+          "dry": "豬油、肉燥、叉燒脂香或背脂感。"
+        }
       },
       {
         "value": "chicken",
         "label": "雞",
-        "description": "雞湯、雞油或雞白湯。"
+        "description": "雞湯、雞油或雞白湯。",
+        "descriptionByForm": {
+          "soup": "雞湯、雞油或雞白湯。",
+          "tsukemen": "雞白湯沾汁、雞油香或雞魚介複合感。",
+          "dry": "雞油香、雞肉配料或清爽禽脂感。"
+        }
       },
       {
         "value": "duck",
         "label": "鴨",
-        "description": "鴨油、鴨清湯、鴨白湯。"
+        "description": "鴨油、鴨清湯、鴨白湯。",
+        "descriptionByForm": {
+          "soup": "鴨油、鴨清湯、鴨白湯。",
+          "tsukemen": "鴨油香、鴨出汁沾汁或鴨肉主角。",
+          "dry": "鴨油香或鴨肉配料作為主角。"
+        }
       },
       {
         "value": "beef",
@@ -175,7 +228,12 @@
       {
         "value": "vegetable",
         "label": "蔬菜",
-        "description": "想要更乾淨或植系的湯體。"
+        "description": "想要更乾淨或植系的湯體。",
+        "descriptionByForm": {
+          "soup": "想要更乾淨或植系的湯體。",
+          "tsukemen": "想要昆布、蔬菜甜味或更乾淨的沾汁線條。",
+          "dry": "想要蔬菜甜味、辛香菜或更輕盈的拌醬主體。"
+        }
       },
       {
         "value": "mixed",
@@ -194,6 +252,20 @@
     "id": "body",
     "title": "Q5. 你想要多重口？",
     "description": "用濃淡與油脂感調整推薦重心。",
+    "copyByForm": {
+      "soup": {
+        "title": "Q5. 你想要湯體多重口？",
+        "description": "用湯體濃淡、油脂與份量感調整推薦重心。"
+      },
+      "tsukemen": {
+        "title": "Q5. 你想要沾汁多濃、多會掛麵？",
+        "description": "用沾汁濃度、油脂與掛麵感調整推薦重心。"
+      },
+      "dry": {
+        "title": "Q5. 你想要油感、醬感多重？",
+        "description": "用拌醬厚度、油脂與衝擊感調整推薦重心。"
+      }
+    },
     "selectionType": "single",
     "minSelections": 1,
     "maxSelections": 1,
@@ -212,7 +284,12 @@
       {
         "value": "rich",
         "label": "濃厚",
-        "description": "湯體或醬體明顯更厚。"
+        "description": "湯體或醬體明顯更厚。",
+        "descriptionByForm": {
+          "soup": "湯體明顯更厚，味道更集中。",
+          "tsukemen": "沾汁明顯更厚，更能掛住麵體。",
+          "dry": "拌醬與油香更厚，包覆感更強。"
+        }
       },
       {
         "value": "backfat-heavy",
@@ -230,6 +307,20 @@
     "id": "noodle",
     "title": "Q6. 麵體最接近哪種？",
     "description": "麵型對博多、家系、札幌、二郎這類流派很有辨識度。",
+    "copyByForm": {
+      "soup": {
+        "title": "Q6. 麵體最接近哪種？",
+        "description": "麵型對博多、家系、札幌、二郎這類湯拉麵流派很有辨識度。"
+      },
+      "tsukemen": {
+        "title": "Q6. 沾麵麵體最接近哪種？",
+        "description": "沾麵通常更重視咬勁、粗度與沾汁附著感。"
+      },
+      "dry": {
+        "title": "Q6. 乾拌麵體最接近哪種？",
+        "description": "乾拌通常更重視咀嚼感、醬汁包覆與份量衝擊。"
+      }
+    },
     "selectionType": "single",
     "minSelections": 1,
     "maxSelections": 1,
@@ -238,7 +329,12 @@
       {
         "value": "thin-straight",
         "label": "細直",
-        "description": "入口快、吸湯直接。"
+        "description": "入口快、吸湯直接。",
+        "descriptionByForm": {
+          "soup": "入口快、吸湯直接。",
+          "tsukemen": "較少見但適合清爽沾汁或昆布水線條。",
+          "dry": "較俐落，適合清爽油香或不想太厚重時。"
+        }
       },
       {
         "value": "medium-thin-straight",
@@ -248,12 +344,22 @@
       {
         "value": "medium-thick-straight",
         "label": "中粗直",
-        "description": "更能扛住厚湯或濃醬。"
+        "description": "更能扛住厚湯或濃醬。",
+        "descriptionByForm": {
+          "soup": "更能扛住厚湯或濃醬。",
+          "tsukemen": "咬勁與沾汁附著感平衡，是沾麵常見重心。",
+          "dry": "能承接濃醬、油香與配料。"
+        }
       },
       {
         "value": "medium-thick-wavy",
         "label": "中粗捲",
-        "description": "容易掛湯，也常見於味噌系。"
+        "description": "容易掛湯，也常見於味噌系。",
+        "descriptionByForm": {
+          "soup": "容易掛湯，也常見於味噌系。",
+          "tsukemen": "容易掛住沾汁，適合濃厚魚介或味噌沾汁。",
+          "dry": "容易抓住拌醬和油脂，口感存在感較高。"
+        }
       },
       {
         "value": "extra-thick",

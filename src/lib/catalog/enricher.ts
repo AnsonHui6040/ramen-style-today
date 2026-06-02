@@ -101,6 +101,7 @@ export function enrichScoringOutcome(outcome: ScoringOutcome): ScoringOutcome {
   return {
     ...outcome,
     results: outcome.results.map(enrichResult),
+    alternativeResults: outcome.alternativeResults.map(enrichResult),
     blockedLead: outcome.blockedLead ? enrichResult(outcome.blockedLead) : null,
   }
 }

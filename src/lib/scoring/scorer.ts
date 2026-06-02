@@ -218,6 +218,20 @@ function collapseByDisplayStyle(results: RankedStyle[]) {
   return [...bestResults.values()].sort((left, right) => right.score - left.score)
 }
 
+function withConfidence(
+  results: RankedStyle[],
+  answers: CompletedAnswers,
+) {
+  return results.map((result, index) => ({
+    ...result,
+    confidence: computeConfidence(
+      result,
+      results[index + 1]?.score ?? result.score - 4,
+      answers,
+    ),
+  }))
+}
+
 export function scoreQuestionnaire(
   answers: CompletedAnswers,
 ): ScoringOutcome {
@@ -231,10 +245,18 @@ export function scoreQuestionnaire(
     scored.filter((result) => result.blockedBy.length > 0),
   )
 
-  const topResults = visible.slice(0, 3).map((result, index) => ({
-    ...result,
-    confidence: computeConfidence(result, visible[index + 1]?.score ?? result.score - 4, answers),
-  }))
+  const visiblePrimary = visible.filter(
+    (result) => result.style.family === answers.form,
+  )
+  const visibleAlternatives = visible.filter(
+    (result) => result.style.family !== answers.form,
+  )
+  const blockedPrimary = blocked.filter(
+    (result) => result.style.family === answers.form,
+  )
+
+  const topResults = withConfidence(visiblePrimary.slice(0, 3), answers)
+  const alternativeResults = withConfidence(visibleAlternatives.slice(0, 3), answers)
 
   const lowConfidence =
     !topResults.length ||
@@ -242,12 +264,13 @@ export function scoreQuestionnaire(
     topResults[0].score - (topResults[1]?.score ?? 0) < 5
 
   const blockedLead =
-    blocked[0] && (!topResults[0] || blocked[0].score >= topResults[0].score)
-      ? blocked[0]
+    blockedPrimary[0] && (!topResults[0] || blockedPrimary[0].score >= topResults[0].score)
+      ? blockedPrimary[0]
       : null
 
   return {
     results: topResults,
+    alternativeResults,
     blockedLead,
     lowConfidence,
   }

@@ -1,8 +1,11 @@
-import type { ChoiceOption, QuestionDefinition } from '../../domain/types'
+import type { ChoiceOption, FormOption, QuestionDefinition } from '../../domain/types'
+import { getDictionary, type Locale } from '../../i18n'
 
 interface QuestionStepProps {
   question: QuestionDefinition
   options: readonly ChoiceOption[]
+  form?: FormOption
+  locale: Locale
   selectedValues: string[]
   stepNumber: number
   totalSteps: number
@@ -16,6 +19,8 @@ interface QuestionStepProps {
 export function QuestionStep({
   question,
   options,
+  form,
+  locale,
   selectedValues,
   stepNumber,
   totalSteps,
@@ -25,6 +30,8 @@ export function QuestionStep({
   onBack,
   onContinue,
 }: QuestionStepProps) {
+  const dictionary = getDictionary(locale)
+  const questionCopy = form ? question.copyByForm?.[form] : undefined
   const exclusiveValues = options
     .filter((option) => option.exclusive)
     .map((option) => option.value)
@@ -36,12 +43,14 @@ export function QuestionStep({
   return (
     <section className="question-card">
       <header className="question-header">
-        <p className="eyebrow">Step {stepNumber} / {totalSteps}</p>
+        <p className="eyebrow">{dictionary.questionUi.step(stepNumber, totalSteps)}</p>
         <div className="progress-track" aria-hidden="true">
           <span style={{ width: `${(stepNumber / totalSteps) * 100}%` }} />
         </div>
-        <h2>{question.title}</h2>
-        <p className="question-description">{question.description}</p>
+        <h2>{questionCopy?.title ?? question.title}</h2>
+        <p className="question-description">
+          {questionCopy?.description ?? question.description}
+        </p>
       </header>
 
       <div className="choice-grid">
@@ -63,7 +72,9 @@ export function QuestionStep({
               onClick={() => onSelect(option.value)}
             >
               <span className="choice-card__title">{option.label}</span>
-              <span className="choice-card__description">{option.description}</span>
+              <span className="choice-card__description">
+                {(form ? option.descriptionByForm?.[form] : undefined) ?? option.description}
+              </span>
             </button>
           )
         })}
@@ -72,13 +83,13 @@ export function QuestionStep({
       <footer className="question-footer">
         <div className="selection-meta">
           {question.selectionType === 'multiple'
-            ? `可選 ${question.maxSelections} 個，目前 ${selectedValues.length} 個`
-            : '單選題'}
+            ? dictionary.questionUi.multipleMeta(question.maxSelections, selectedValues.length)
+            : dictionary.questionUi.singleMeta}
         </div>
 
         <div className="question-actions">
           <button type="button" className="secondary-button" onClick={onBack}>
-            上一步
+            {dictionary.questionUi.back}
           </button>
           <button
             type="button"
@@ -86,7 +97,7 @@ export function QuestionStep({
             disabled={!canContinue}
             onClick={onContinue}
           >
-            {isLast ? '看結果' : '下一題'}
+            {isLast ? dictionary.questionUi.results : dictionary.questionUi.next}
           </button>
         </div>
       </footer>

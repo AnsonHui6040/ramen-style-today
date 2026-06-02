@@ -9,6 +9,13 @@ import type {
   ScoringOutcome,
   UserAnswers,
 } from './domain/types'
+import {
+  getDictionary,
+  localizeOption,
+  localizeQuestion,
+  locales,
+  type Locale,
+} from './i18n'
 import { enrichScoringOutcome } from './lib/catalog/enricher'
 import { scoreQuestionnaire } from './lib/scoring/scorer'
 
@@ -18,6 +25,7 @@ interface StoredState {
   phase: AppPhase
   stepIndex: number
   answers: UserAnswers
+  locale: Locale
 }
 
 const STORAGE_KEY = 'ramen-style-today.state.v1'
@@ -26,6 +34,10 @@ const initialAnswers: UserAnswers = {
   source: [],
   signature: [],
   exclusions: ['none'],
+}
+
+function isLocale(value: unknown): value is Locale {
+  return typeof value === 'string' && locales.includes(value as Locale)
 }
 
 function getStorage() {
@@ -45,6 +57,7 @@ function readStoredState(): StoredState {
     phase: 'intro',
     stepIndex: 0,
     answers: initialAnswers,
+    locale: 'zh-TW',
   }
 
   const storage = getStorage()
@@ -67,6 +80,7 @@ function readStoredState(): StoredState {
         typeof parsed.stepIndex === 'number' && parsed.stepIndex >= 0
           ? parsed.stepIndex
           : 0,
+      locale: isLocale(parsed.locale) ? parsed.locale : 'zh-TW',
       answers: {
         ...initialAnswers,
         ...parsed.answers,
@@ -118,6 +132,7 @@ function App() {
     Math.min(storedState.stepIndex, questionBank.length - 1),
   )
   const [answers, setAnswers] = useState<UserAnswers>(storedState.answers)
+  const [locale, setLocale] = useState<Locale>(storedState.locale)
   const [outcome, setOutcome] = useState<ScoringOutcome | null>(() => {
     const completed = toCompletedAnswers(storedState.answers)
     return storedState.phase === 'results' && completed
@@ -136,14 +151,23 @@ function App() {
       phase,
       stepIndex,
       answers,
+      locale,
     }
 
     storage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
-  }, [answers, phase, stepIndex])
+  }, [answers, locale, phase, stepIndex])
 
   const currentQuestion = questionBank[stepIndex]
   const currentOptions = currentQuestion
     ? resolveQuestionOptions(currentQuestion, answers.form)
+    : []
+  const currentQuestionView = currentQuestion
+    ? localizeQuestion(currentQuestion, locale, answers.form)
+    : null
+  const currentOptionsView = currentQuestion
+    ? currentOptions.map((option) =>
+      localizeOption(currentQuestion.id, option, locale, answers.form),
+    )
     : []
   const selectedValues = currentQuestion
     ? getSelectedValues(currentQuestion.id, answers)
@@ -311,63 +335,76 @@ function App() {
     const values = getSelectedValues(question.id, answers)
     return hasMeaningfulAnswer(question.id, values)
   }).length
+  const dictionary = getDictionary(locale)
 
   return (
     <div className="app-shell">
       <header className="app-header">
         <div>
           <p className="eyebrow">Ramen Style Today</p>
-          <h1>用 8 題找出今天該吃的拉麵風格</h1>
+          <h1>{dictionary.app.headline}</h1>
           <p className="lede">
-            這是第一版實作：問卷、規則與結果說明都已落地，先聚焦在風格分類與可解釋推薦。
+            {dictionary.app.lede}
           </p>
         </div>
+        <div className="locale-switcher" aria-label="Language">
+          {locales.map((candidate) => (
+            <button
+              key={candidate}
+              type="button"
+              className={candidate === locale ? 'active' : ''}
+              aria-pressed={candidate === locale}
+              onClick={() => setLocale(candidate)}
+            >
+              {getDictionary(candidate).localeLabel}
+            </button>
+          ))}
+        </div>
         <div className="summary-pills">
-          <span className="pill">18 個前台風格</span>
-          <span className="pill">Top 3 可解釋結果</span>
-          <span className="pill">Q8 硬過濾</span>
+          {dictionary.app.pills.map((pill) => (
+            <span key={pill} className="pill">{pill}</span>
+          ))}
         </div>
       </header>
 
       {phase === 'intro' ? (
         <section className="intro-panel">
           <div className="intro-copy">
-            <h2>先分形式，再用調味、主出汁、濃淡、麵型與標誌元素收斂。</h2>
+            <h2>{dictionary.app.introTitle}</h2>
             <p>
-              這版已把你提供的 8 題結構、權重與代表性衝突規則做進前端規則引擎，回答完成就能直接看到前三名與理由。
+              {dictionary.app.introBody}
             </p>
             <div className="intro-stats">
               <div>
                 <strong>7-8</strong>
-                <span>實際作答步數</span>
+                <span>{dictionary.app.statSteps}</span>
               </div>
               <div>
                 <strong>{answeredCount}</strong>
-                <span>已暫存答案</span>
+                <span>{dictionary.app.statSaved}</span>
               </div>
               <div>
                 <strong>100</strong>
-                <span>總權重</span>
+                <span>{dictionary.app.statWeight}</span>
               </div>
             </div>
           </div>
 
           <aside className="intro-card">
-            <h3>目前已實作</h3>
+            <h3>{dictionary.app.implementedTitle}</h3>
             <ul>
-              <li>Q1 驅動 Q2 分支</li>
-              <li>18 個風格的初版規則庫</li>
-              <li>加分、扣分、硬過濾與低信心提示</li>
-              <li>本機暫存，重新整理不會遺失進度</li>
+              {dictionary.app.implemented.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
 
             <div className="question-actions align-left">
               <button type="button" className="primary-button" onClick={startFlow}>
-                {answeredCount > 0 ? '繼續作答' : '開始問卷'}
+                {answeredCount > 0 ? dictionary.app.continue : dictionary.app.start}
               </button>
               {answeredCount > 0 ? (
                 <button type="button" className="secondary-button" onClick={restart}>
-                  清除暫存
+                  {dictionary.app.clear}
                 </button>
               ) : null}
             </div>
@@ -375,10 +412,12 @@ function App() {
         </section>
       ) : null}
 
-      {phase === 'questions' && currentQuestion ? (
+      {phase === 'questions' && currentQuestion && currentQuestionView ? (
         <QuestionStep
-          question={currentQuestion}
-          options={currentOptions}
+          question={currentQuestionView}
+          options={currentOptionsView}
+          form={answers.form}
+          locale={locale}
           selectedValues={selectedValues}
           stepNumber={stepIndex + 1}
           totalSteps={questionBank.length}
@@ -393,6 +432,7 @@ function App() {
       {phase === 'results' && outcome ? (
         <ResultsPanel
           outcome={outcome}
+          locale={locale}
           onRestart={restart}
           onReviewAnswers={reviewAnswers}
         />

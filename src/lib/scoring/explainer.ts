@@ -42,12 +42,19 @@ export function buildBreakdown(
   tiers: Record<(typeof scoredQuestionIds)[number], MatchTier>,
   points: Record<(typeof scoredQuestionIds)[number], number>,
 ) {
-  return scoredQuestionIds.map((questionId) => ({
-    questionId,
-    questionLabel: getQuestionById(questionId)?.title ?? questionId,
-    answerLabel: getAnswerLabel(questionId, answers),
-    tier: tiers[questionId],
-    points: points[questionId],
-    note: tierNotes[tiers[questionId]],
-  }))
+  return scoredQuestionIds.map((questionId) => {
+    const answerValues = Array.isArray(answers[questionId])
+      ? answers[questionId]
+      : [answers[questionId]]
+
+    return {
+      questionId,
+      questionLabel: getQuestionById(questionId)?.title ?? questionId,
+      answerValues,
+      answerLabel: getAnswerLabel(questionId, answers),
+      tier: tiers[questionId],
+      points: points[questionId],
+      note: tierNotes[tiers[questionId]],
+    }
+  })
 }

@@ -1,6 +1,19 @@
 import { getOptionLabel } from '../../config/questions'
 import type { MenuItemDefinition } from '../../domain/catalog'
 import type { ScoringOutcome } from '../../domain/types'
+import {
+  formatCoreDescriptor,
+  getDictionary,
+  localizeAnswerLabel,
+  localizeCatalogMatchReason,
+  localizeMenuItem,
+  localizeOptionLabel,
+  localizeQuestionTitle,
+  localizeReason,
+  localizeStore,
+  localizeStyle,
+  type Locale,
+} from '../../i18n'
 
 const currencyFormatters = {
   JPY: new Intl.NumberFormat('ja-JP', {
@@ -25,30 +38,34 @@ function formatItemPrice(item: MenuItemDefinition) {
 
 interface ResultsPanelProps {
   outcome: ScoringOutcome
+  locale: Locale
   onRestart: () => void
   onReviewAnswers: () => void
 }
 
 export function ResultsPanel({
   outcome,
+  locale,
   onRestart,
   onReviewAnswers,
 }: ResultsPanelProps) {
+  const dictionary = getDictionary(locale)
   const lead = outcome.results[0]
+  const leadStyle = lead ? localizeStyle(lead, locale) : null
 
   if (!lead) {
     return (
       <section className="results-shell">
         <div className="notice-card warning">
-          <h2>沒有可顯示的結果</h2>
-          <p>目前所有高分風格都被硬過濾擋掉了，請回去調整 Q8 或其他訊號。</p>
+          <h2>{dictionary.results.noResultsTitle}</h2>
+          <p>{dictionary.results.noResultsBody}</p>
         </div>
         <div className="question-actions align-left">
           <button type="button" className="secondary-button" onClick={onReviewAnswers}>
-            回去調整
+            {dictionary.results.adjust}
           </button>
           <button type="button" className="primary-button" onClick={onRestart}>
-            重新開始
+            {dictionary.results.restart}
           </button>
         </div>
       </section>
@@ -58,48 +75,55 @@ export function ResultsPanel({
   return (
     <section className="results-shell">
       <header className="results-hero">
-        <p className="eyebrow">Top Match</p>
-        <h2>今天先吃 {lead.style.label}</h2>
-        <p className="results-summary">{lead.style.summary}</p>
+        <p className="eyebrow">{dictionary.results.topMatch}</p>
+        <h2>{dictionary.results.eatToday(leadStyle?.label ?? lead.style.label)}</h2>
+        <p className="results-summary">{leadStyle?.summary ?? lead.style.summary}</p>
 
         <div className="hero-metrics">
           <div className="metric-card">
-            <span className="metric-label">信心分數</span>
+            <span className="metric-label">{dictionary.results.confidence}</span>
             <strong>{lead.confidence}%</strong>
           </div>
           <div className="metric-card">
-            <span className="metric-label">組合結果</span>
-            <strong>{lead.coreDescriptor}</strong>
+            <span className="metric-label">{dictionary.results.descriptor}</span>
+            <strong>{formatCoreDescriptor(lead, locale)}</strong>
           </div>
         </div>
 
         {outcome.lowConfidence ? (
           <div className="notice-card warning">
-            <h3>這次結果偏探索型</h3>
-            <p>第一名和第二名距離不大，代表你的答案跨了兩條以上的風格線。</p>
+            <h3>{dictionary.results.lowConfidenceTitle}</h3>
+            <p>{dictionary.results.lowConfidenceBody}</p>
           </div>
         ) : null}
 
         {outcome.blockedLead ? (
           <div className="notice-card info">
-            <h3>有高分風格被硬過濾擋掉</h3>
+            <h3>{dictionary.results.blockedTitle}</h3>
             <p>
-              {outcome.blockedLead.style.label} 原本分數也很高，但因為排除了
-              {' '}
-              {outcome.blockedLead.blockedBy
-                .map((value) => getOptionLabel('exclusions', value))
-                .join(' / ')}
-              ，所以沒有出現在正式推薦裡。
+              {dictionary.results.blockedBody(
+                localizeStyle(outcome.blockedLead, locale).label,
+                outcome.blockedLead.blockedBy
+                  .map((value) =>
+                    localizeOptionLabel(
+                      'exclusions',
+                      value,
+                      getOptionLabel('exclusions', value),
+                      locale,
+                    ),
+                  )
+                  .join(' / '),
+              )}
             </p>
           </div>
         ) : null}
 
         <div className="question-actions align-left">
           <button type="button" className="secondary-button" onClick={onReviewAnswers}>
-            調整答案
+            {dictionary.results.adjust}
           </button>
           <button type="button" className="primary-button" onClick={onRestart}>
-            重新開始
+            {dictionary.results.restart}
           </button>
         </div>
       </header>
@@ -116,70 +140,90 @@ export function ResultsPanel({
               <span className="confidence-pill">{result.confidence}%</span>
             </div>
 
-            <h3>{result.style.label}</h3>
-            <p className="result-card__descriptor">{result.coreDescriptor}</p>
-            <p className="result-card__summary">{result.style.summary}</p>
+            <h3>{localizeStyle(result, locale).label}</h3>
+            <p className="result-card__descriptor">{formatCoreDescriptor(result, locale)}</p>
+            <p className="result-card__summary">{localizeStyle(result, locale).summary}</p>
 
             <div className="support-list">
               {result.bonusReasons.length ? (
-                <p>加分: {result.bonusReasons.join(' / ')}</p>
+                <p>
+                  {dictionary.results.bonus}:{' '}
+                  {result.bonusReasons.map((reason) => localizeReason(reason, locale)).join(' / ')}
+                </p>
               ) : null}
               {result.penaltyReasons.length ? (
-                <p>扣分: {result.penaltyReasons.join(' / ')}</p>
+                <p>
+                  {dictionary.results.penalty}:{' '}
+                  {result.penaltyReasons.map((reason) => localizeReason(reason, locale)).join(' / ')}
+                </p>
               ) : null}
             </div>
 
             <div className="catalog-block">
-              <p className="catalog-block__title">推薦店家 / 品項</p>
+              <p className="catalog-block__title">{dictionary.results.catalogTitle}</p>
 
               {result.catalogRecommendations.length ? (
                 <ul className="catalog-list">
-                  {result.catalogRecommendations.map((recommendation) => (
-                    <li key={recommendation.store.id} className="catalog-card">
-                      <div>
-                        <div className="catalog-card__headline">
-                          <strong>{recommendation.store.name}</strong>
-                          {recommendation.store.sourceUrl ? (
-                            <a href={recommendation.store.sourceUrl} target="_blank" rel="noreferrer">
-                              官方頁面
-                            </a>
-                          ) : null}
-                        </div>
-                        <p>
-                          {recommendation.store.location}
-                          {' · '}
-                          {recommendation.store.summary}
-                        </p>
-                        <p>{recommendation.matchReason}</p>
-                      </div>
+                  {result.catalogRecommendations.map((recommendation) => {
+                    const store = localizeStore(recommendation.store, locale)
 
-                      <ul className="catalog-items">
-                        {recommendation.items.map((item) => (
-                          <li key={item.id}>
-                            <div className="catalog-item__headline">
-                              <span>{item.name}</span>
-                              {formatItemPrice(item) ? <span>{formatItemPrice(item)}</span> : null}
-                            </div>
-                            <small>{item.summary}</small>
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
-                  ))}
+                    return (
+                      <li key={recommendation.store.id} className="catalog-card">
+                        <div>
+                          <div className="catalog-card__headline">
+                            <strong>{store.name}</strong>
+                            {store.sourceUrl ? (
+                              <a href={store.sourceUrl} target="_blank" rel="noreferrer">
+                                {dictionary.results.officialPage}
+                              </a>
+                            ) : null}
+                          </div>
+                          <p>
+                            {store.location}
+                            {' · '}
+                            {store.summary}
+                          </p>
+                          <p>{localizeCatalogMatchReason(recommendation.matchReason, locale)}</p>
+                        </div>
+
+                        <ul className="catalog-items">
+                          {recommendation.items.map((item) => {
+                            const localizedItem = localizeMenuItem(item, locale)
+
+                            return (
+                              <li key={item.id}>
+                                <div className="catalog-item__headline">
+                                  <span>{localizedItem.name}</span>
+                                  {formatItemPrice(item) ? <span>{formatItemPrice(item)}</span> : null}
+                                </div>
+                                <small>{localizedItem.summary}</small>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
-                <p className="catalog-empty">這個結果已經有風格判斷，但目前還沒掛上對應店家資料。</p>
+                <p className="catalog-empty">{dictionary.results.catalogEmpty}</p>
               )}
             </div>
 
             <details className="breakdown-panel" open={index === 0}>
-              <summary>為什麼是這一碗</summary>
+              <summary>{dictionary.results.why}</summary>
               <ul className="breakdown-list">
                 {result.breakdown.map((item) => (
                   <li key={item.questionId} className={`tier-${item.tier}`}>
-                    <span className="breakdown-question">{item.questionLabel}</span>
-                    <span className="breakdown-answer">{item.answerLabel}</span>
-                    <span className="breakdown-note">{item.note} +{item.points}</span>
+                    <span className="breakdown-question">
+                      {localizeQuestionTitle(item.questionId, item.questionLabel, locale)}
+                    </span>
+                    <span className="breakdown-answer">
+                      {localizeAnswerLabel(item.questionId, item.answerValues, item.answerLabel, locale)}
+                    </span>
+                    <span className="breakdown-note">
+                      {dictionary.results.tierNotes[item.tier]} +{item.points}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -187,6 +231,32 @@ export function ResultsPanel({
           </article>
         ))}
       </div>
+
+      {outcome.alternativeResults.length ? (
+        <section className="alternative-section">
+          <div className="section-heading">
+            <p className="eyebrow">{dictionary.results.nearbyEyebrow}</p>
+            <h3>{dictionary.results.nearbyTitle}</h3>
+            <p>{dictionary.results.nearbyBody}</p>
+          </div>
+
+          <div className="alternative-list">
+            {outcome.alternativeResults.map((result) => (
+              <article
+                key={result.coreType.id}
+                className="alternative-card"
+                style={{ '--accent-color': result.style.accent } as React.CSSProperties}
+              >
+                <div>
+                  <h4>{localizeStyle(result, locale).label}</h4>
+                  <p>{formatCoreDescriptor(result, locale)}</p>
+                </div>
+                <span>{result.confidence}%</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
   )
 }
