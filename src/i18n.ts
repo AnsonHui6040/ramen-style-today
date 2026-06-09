@@ -78,6 +78,26 @@ type Dictionary = {
     nearbyEyebrow: string
     nearbyTitle: string
     nearbyBody: string
+    map: {
+      title: string
+      body: (style: string) => string
+      region: string
+      style: string
+      search: string
+      allStyles: string
+      resultCount: (count: number) => string
+      noShops: string
+      loading: string
+      mapUnavailable: string
+      selectedStyle: (style: string) => string
+      rating: string
+      reviews: (count: number) => string
+      price: string
+      address: string
+      openMap: string
+      officialSite: string
+      dataNote: (date: string) => string
+    }
     tierNotes: Record<RankedStyle['breakdown'][number]['tier'], string>
   }
   questions: Record<QuestionId, QuestionCopy>
@@ -145,6 +165,26 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: '相近替代',
       nearbyBody: '這些風格分數也接近，但形式和你一開始選的不同，所以不放進主推薦。',
+      map: {
+        title: '附近可以去哪吃',
+        body: (style) => `先用「${style}」這套分類幫你縮小地圖範圍，也可以切回全部慢慢看。`,
+        region: '縣市',
+        style: '拉麵分類',
+        search: '搜尋店名、地址或商圈',
+        allStyles: '全部類型',
+        resultCount: (count) => `${count} 間`,
+        noShops: '目前沒有符合條件的店家。',
+        loading: '地圖資料載入中',
+        mapUnavailable: '測試環境不載入互動地圖，但店家列表仍可檢查。',
+        selectedStyle: (style) => `目前分類：${style}`,
+        rating: '評分',
+        reviews: (count) => `${count.toLocaleString('zh-TW')} 則評論`,
+        price: '價格',
+        address: '地址',
+        openMap: '開 Google Maps',
+        officialSite: '官方網站',
+        dataNote: (date) => `資料更新：${date}`,
+      },
       tierNotes: {
         exact: '這個選擇很貼近這碗的個性。',
         adjacent: '方向是接近的，只是沒有那麼典型。',
@@ -231,6 +271,26 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: 'Nearby alternatives',
       nearbyBody: 'These styles also scored well, but their format differs from your first choice.',
+      map: {
+        title: 'Where to eat nearby',
+        body: (style) => `The map starts from the current ${style} classification and keeps the shop data as-is.`,
+        region: 'Region',
+        style: 'Ramen style',
+        search: 'Search name, address, or area',
+        allStyles: 'All types',
+        resultCount: (count) => `${count} shops`,
+        noShops: 'No shops match these filters yet.',
+        loading: 'Loading map data',
+        mapUnavailable: 'Interactive maps are skipped in tests, but the shop list is still rendered.',
+        selectedStyle: (style) => `Current style: ${style}`,
+        rating: 'Rating',
+        reviews: (count) => `${count.toLocaleString('en')} reviews`,
+        price: 'Price',
+        address: 'Address',
+        openMap: 'Open Google Maps',
+        officialSite: 'Official site',
+        dataNote: (date) => `Updated: ${date}`,
+      },
       tierNotes: {
         exact: 'Core signal matched.',
         adjacent: 'Close direction, but not the most typical fit.',
@@ -406,6 +466,26 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyEyebrow: 'Nearby Styles',
       nearbyTitle: '近い代替案',
       nearbyBody: 'これらも高得点ですが、最初に選んだ提供形式と異なるため主推薦には入れていません。',
+      map: {
+        title: '近くで食べるなら',
+        body: (style) => `まず現在の「${style}」分類で地図を絞り込みます。店舗データはそのまま使います。`,
+        region: '地域',
+        style: 'ラーメン分類',
+        search: '店名、住所、エリアを検索',
+        allStyles: 'すべてのタイプ',
+        resultCount: (count) => `${count} 件`,
+        noShops: '条件に合う店舗はまだありません。',
+        loading: '地図データを読み込み中',
+        mapUnavailable: 'テスト環境ではインタラクティブ地図を読み込みませんが、店舗リストは確認できます。',
+        selectedStyle: (style) => `現在の分類：${style}`,
+        rating: '評価',
+        reviews: (count) => `${count.toLocaleString('ja-JP')} 件の口コミ`,
+        price: '価格',
+        address: '住所',
+        openMap: 'Google Maps を開く',
+        officialSite: '公式サイト',
+        dataNote: (date) => `データ更新：${date}`,
+      },
       tierNotes: {
         exact: '主要なシグナルが一致。',
         adjacent: '方向性は近いが、最典型ではありません。',

@@ -555,6 +555,196 @@
   font-weight: 800;
 }
 
+.finder-map-section {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--edge);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(255, 247, 236, 0.9));
+  box-shadow: var(--shadow-soft);
+}
+
+.finder-controls {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(220px, 1fr) minmax(220px, 1.2fr);
+  gap: 12px;
+}
+
+.finder-controls label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.finder-controls select,
+.finder-controls input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(131, 92, 61, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+}
+
+.finder-map-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+  gap: 14px;
+  min-height: 420px;
+}
+
+.finder-map-frame {
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid rgba(131, 92, 61, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.finder-map-canvas,
+.finder-map-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.finder-map-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.finder-map-section .leaflet-container {
+  font-family: var(--sans);
+}
+
+.finder-shop-panel,
+.finder-shop-detail {
+  border: 1px solid rgba(131, 92, 61, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.finder-shop-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.finder-shop-panel__summary {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(131, 92, 61, 0.14);
+}
+
+.finder-shop-panel__summary strong {
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.finder-shop-panel__summary span,
+.finder-shop-panel__summary small {
+  color: var(--muted);
+}
+
+.finder-shop-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-height: 336px;
+  overflow: auto;
+  padding: 12px;
+}
+
+.finder-shop-card {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(131, 92, 61, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 251, 246, 0.86);
+  color: var(--muted);
+  text-align: left;
+}
+
+.finder-shop-card.active {
+  border-color: rgba(168, 71, 31, 0.58);
+  background: rgba(255, 239, 220, 0.9);
+}
+
+.finder-shop-card__topline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.finder-shop-card strong {
+  color: var(--ink);
+}
+
+.finder-shop-card__topline span {
+  flex: 0 0 auto;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.finder-shop-detail {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.finder-shop-detail h4,
+.finder-shop-detail p {
+  margin: 0;
+}
+
+.finder-shop-detail h4 {
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
+.finder-shop-detail p {
+  color: var(--muted);
+}
+
+.finder-shop-detail__facts,
+.finder-shop-detail__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.finder-shop-detail__facts span,
+.finder-shop-detail__links a {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(141, 68, 34, 0.08);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.finder-shop-detail__links a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.finder-shop-detail__links a:hover {
+  text-decoration: underline;
+}
+
 .tier-exact {
   border-left: 4px solid #b85c2d;
 }
@@ -575,7 +765,9 @@
   .intro-panel,
   .results-grid,
   .alternative-list,
-  .hero-metrics {
+  .hero-metrics,
+  .finder-controls,
+  .finder-map-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -593,6 +785,7 @@
   .results-hero,
   .result-card,
   .alternative-section,
+  .finder-map-section,
   .notice-card {
     border-radius: 24px;
   }
@@ -603,8 +796,16 @@
   .question-card,
   .results-hero,
   .result-card,
-  .alternative-section {
+  .alternative-section,
+  .finder-map-section {
     padding: 20px;
+  }
+
+  .finder-map-grid,
+  .finder-map-frame,
+  .finder-map-canvas,
+  .finder-map-placeholder {
+    min-height: 340px;
   }
 
   .choice-grid,

@@ -1,6 +1,7 @@
 import { getOptionLabel } from '../../config/questions'
 import type { MenuItemDefinition } from '../../domain/catalog'
 import type { ScoringOutcome } from '../../domain/types'
+import { RamenFinderMap } from '../map/RamenFinderMap'
 import {
   formatCoreDescriptor,
   getDictionary,
@@ -127,6 +128,8 @@ export function ResultsPanel({
           </button>
         </div>
       </header>
+
+      <RamenFinderMap result={lead} locale={locale} />
 
       <div className="results-grid">
         {outcome.results.map((result, index) => (
