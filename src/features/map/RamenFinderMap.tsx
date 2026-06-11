@@ -59,8 +59,14 @@ interface RamenFinderMapProps {
   locale: Locale
 }
 
-const DATA_ROOT = '/ramen-map/data'
+const DATA_ROOT = `${import.meta.env.BASE_URL}ramen-map/data`
 const DEFAULT_REGION = 'taichung'
+const FALLBACK_REGION: FinderRegion = {
+  region: '台中市',
+  regionCode: DEFAULT_REGION,
+  shopCount: 0,
+  dataPath: `${DATA_ROOT}/${DEFAULT_REGION}.json`,
+}
 
 const CURRENT_STYLE_TO_FINDER_CODES: Record<string, readonly string[]> = {
   'shoyu-chintan': ['CKLF', 'CKLT', 'CKHF', 'CKHT'],
@@ -120,6 +126,16 @@ function getCurrentStyleLabel(styleId: string) {
   return styleCatalog.find((style) => style.id === styleId)?.label ?? styleId
 }
 
+async function fetchMapJson<T>(path: string) {
+  const response = await fetch(path)
+
+  if (!response.ok) {
+    throw new Error(`Unable to load ${path}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
 export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   const dictionary = getDictionary(locale)
   const copy = dictionary.results.map
@@ -132,6 +148,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   const [currentStyleId, setCurrentStyleId] = useState(initialCurrentStyleId)
   const [query, setQuery] = useState('')
   const [selectedShopId, setSelectedShopId] = useState<string>('')
+  const [loadError, setLoadError] = useState(false)
   const mapNodeRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markersLayerRef = useRef<L.LayerGroup | null>(null)
@@ -144,11 +161,17 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
     let ignore = false
 
     async function loadBaseData() {
-      const nextMeta = await fetch(`${DATA_ROOT}/meta.json`)
-        .then((response) => response.json() as Promise<FinderMeta>)
+      try {
+        const nextMeta = await fetchMapJson<FinderMeta>(`${DATA_ROOT}/meta.json`)
 
-      if (!ignore) {
-        setMeta(nextMeta)
+        if (!ignore) {
+          setMeta(nextMeta)
+          setLoadError(false)
+        }
+      } catch {
+        if (!ignore) {
+          setLoadError(true)
+        }
       }
     }
 
@@ -168,12 +191,21 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
 
     async function loadRegionData() {
       setRegionData(null)
-      const nextRegionData = await fetch(`${DATA_ROOT}/${regionCode}.json`)
-        .then((response) => response.json() as Promise<FinderRegionData>)
+      setLoadError(false)
 
-      if (!ignore) {
-        setRegionData(nextRegionData)
-        setSelectedShopId(nextRegionData.shops[0]?.shopId ?? '')
+      try {
+        const nextRegionData = await fetchMapJson<FinderRegionData>(`${DATA_ROOT}/${regionCode}.json`)
+
+        if (!ignore) {
+          setRegionData(nextRegionData)
+          setSelectedShopId(nextRegionData.shops[0]?.shopId ?? '')
+        }
+      } catch {
+        if (!ignore) {
+          setRegionData(null)
+          setSelectedShopId('')
+          setLoadError(true)
+        }
       }
     }
 
@@ -197,6 +229,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   const selectedShop = filteredShops.find((shop) => shop.shopId === selectedShopId) ?? filteredShops[0]
   const selectedStyleLabel = currentStyleId ? getCurrentStyleLabel(currentStyleId) : copy.allStyles
   const hasInteractiveMap = !isTestMode
+  const regionOptions = meta?.regions.length ? meta.regions : [FALLBACK_REGION]
 
   useEffect(() => {
     if (!hasInteractiveMap || !mapNodeRef.current || mapRef.current) {
@@ -282,7 +315,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
         <label>
           <span>{copy.region}</span>
           <select value={regionCode} onChange={(event) => setRegionCode(event.target.value)}>
-            {(meta?.regions ?? []).map((region) => (
+            {regionOptions.map((region) => (
               <option key={region.regionCode} value={region.regionCode}>
                 {region.shopCount > 0
                   ? `${region.region} (${region.shopCount})`
@@ -334,6 +367,8 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
             </span>
             {regionData ? (
               <small>{copy.dataNote(getUpdatedDate(regionData.updatedAt, locale))}</small>
+            ) : loadError ? (
+              <small>{copy.mapLoadFailed}</small>
             ) : (
               <small>{copy.loading}</small>
             )}
@@ -361,7 +396,9 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
                 </span>
               </button>
             )) : (
-              <p className="catalog-empty">{regionData ? copy.noShops : copy.loading}</p>
+              <p className="catalog-empty">
+                {loadError ? copy.mapLoadFailed : regionData ? copy.noShops : copy.loading}
+              </p>
             )}
           </div>
         </aside>

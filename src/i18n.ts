@@ -88,6 +88,7 @@ type Dictionary = {
       resultCount: (count: number) => string
       noShops: string
       loading: string
+      mapLoadFailed: string
       mapUnavailable: string
       selectedStyle: (style: string) => string
       rating: string
@@ -175,6 +176,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
         resultCount: (count) => `${count} 間`,
         noShops: '目前沒有符合條件的店家。',
         loading: '地圖資料載入中',
+        mapLoadFailed: '地圖資料暫時載入失敗，請重新整理再試一次。',
         mapUnavailable: '測試環境不載入互動地圖，但店家列表仍可檢查。',
         selectedStyle: (style) => `目前分類：${style}`,
         rating: '評分',
@@ -281,6 +283,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
         resultCount: (count) => `${count} shops`,
         noShops: 'No shops match these filters yet.',
         loading: 'Loading map data',
+        mapLoadFailed: 'Map data failed to load. Refresh and try again.',
         mapUnavailable: 'Interactive maps are skipped in tests, but the shop list is still rendered.',
         selectedStyle: (style) => `Current style: ${style}`,
         rating: 'Rating',
@@ -476,6 +479,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
         resultCount: (count) => `${count} 件`,
         noShops: '条件に合う店舗はまだありません。',
         loading: '地図データを読み込み中',
+        mapLoadFailed: '地図データを読み込めませんでした。再読み込みしてください。',
         mapUnavailable: 'テスト環境ではインタラクティブ地図を読み込みませんが、店舗リストは確認できます。',
         selectedStyle: (style) => `現在の分類：${style}`,
         rating: '評価',
