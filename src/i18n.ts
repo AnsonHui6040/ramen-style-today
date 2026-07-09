@@ -91,12 +91,11 @@ type Dictionary = {
       mapLoadFailed: string
       mapUnavailable: string
       selectedStyle: (style: string) => string
-      rating: string
-      reviews: (count: number) => string
-      price: string
       address: string
+      verified: (date: string) => string
+      checkOfficialHours: string
       openMap: string
-      officialSite: string
+      officialInfo: string
       dataNote: (date: string) => string
     }
     tierNotes: Record<RankedStyle['breakdown'][number]['tier'], string>
@@ -179,12 +178,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
         mapLoadFailed: '地圖資料暫時載入失敗，請重新整理再試一次。',
         mapUnavailable: '測試環境不載入互動地圖，但店家列表仍可檢查。',
         selectedStyle: (style) => `目前分類：${style}`,
-        rating: '評分',
-        reviews: (count) => `${count.toLocaleString('zh-TW')} 則評論`,
-        price: '價格',
         address: '地址',
-        openMap: '開 Google Maps',
-        officialSite: '官方網站',
+        verified: (date) => `核實日期 ${date}`,
+        checkOfficialHours: '營業時間請查看店家官方資訊',
+        openMap: '查看地圖',
+        officialInfo: '官方資訊',
         dataNote: (date) => `資料更新：${date}`,
       },
       tierNotes: {
@@ -286,12 +284,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
         mapLoadFailed: 'Map data failed to load. Refresh and try again.',
         mapUnavailable: 'Interactive maps are skipped in tests, but the shop list is still rendered.',
         selectedStyle: (style) => `Current style: ${style}`,
-        rating: 'Rating',
-        reviews: (count) => `${count.toLocaleString('en')} reviews`,
-        price: 'Price',
         address: 'Address',
-        openMap: 'Open Google Maps',
-        officialSite: 'Official site',
+        verified: (date) => `Verified ${date}`,
+        checkOfficialHours: 'Check official information for current opening hours',
+        openMap: 'View map',
+        officialInfo: 'Official information',
         dataNote: (date) => `Updated: ${date}`,
       },
       tierNotes: {
@@ -482,12 +479,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
         mapLoadFailed: '地図データを読み込めませんでした。再読み込みしてください。',
         mapUnavailable: 'テスト環境ではインタラクティブ地図を読み込みませんが、店舗リストは確認できます。',
         selectedStyle: (style) => `現在の分類：${style}`,
-        rating: '評価',
-        reviews: (count) => `${count.toLocaleString('ja-JP')} 件の口コミ`,
-        price: '価格',
         address: '住所',
-        openMap: 'Google Maps を開く',
-        officialSite: '公式サイト',
+        verified: (date) => `確認日 ${date}`,
+        checkOfficialHours: '営業時間は公式情報をご確認ください',
+        openMap: '地図を見る',
+        officialInfo: '公式情報',
         dataNote: (date) => `データ更新：${date}`,
       },
       tierNotes: {
