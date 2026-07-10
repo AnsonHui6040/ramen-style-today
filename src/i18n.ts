@@ -10,6 +10,7 @@ import type {
   QuestionDefinition,
   QuestionId,
   RankedStyle,
+  StyleDefinition,
 } from './domain/types'
 
 export const locales = ['zh-TW', 'en', 'ja'] as const
@@ -45,6 +46,10 @@ type Dictionary = {
     start: string
     continue: string
     clear: string
+    language: string
+    skipToContent: string
+    opensInNewTab: (label: string) => string
+    storageUnavailable: string
   }
   questionUi: {
     step: (current: number, total: number) => string
@@ -79,6 +84,7 @@ type Dictionary = {
     nearbyTitle: string
     nearbyBody: string
     map: {
+      eyebrow: string
       title: string
       body: (style: string) => string
       region: string
@@ -91,12 +97,11 @@ type Dictionary = {
       mapLoadFailed: string
       mapUnavailable: string
       selectedStyle: (style: string) => string
-      rating: string
-      reviews: (count: number) => string
-      price: string
       address: string
+      verified: (date: string) => string
+      checkOfficialHours: string
       openMap: string
-      officialSite: string
+      officialInfo: string
       dataNote: (date: string) => string
     }
     tierNotes: Record<RankedStyle['breakdown'][number]['tier'], string>
@@ -132,6 +137,10 @@ export const dictionaries: Record<Locale, Dictionary> = {
       start: '開始問卷',
       continue: '繼續作答',
       clear: '清除暫存',
+      language: '語言',
+      skipToContent: '前往主要內容',
+      opensInNewTab: (label) => `${label}（在新分頁開啟）`,
+      storageUnavailable: '無法儲存本機作答；你仍可繼續，但重新整理後不會保留進度。',
     },
     questionUi: {
       step: (current, total) => `第 ${current} / ${total} 題`,
@@ -167,10 +176,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyTitle: '相近替代',
       nearbyBody: '這些風格分數也接近，但形式和你一開始選的不同，所以不放進主推薦。',
       map: {
-        title: '附近可以去哪吃',
-        body: (style) => `先用「${style}」這套分類幫你縮小地圖範圍，也可以切回全部慢慢看。`,
+        eyebrow: '拉麵地圖',
+        title: '台中拉麵地圖',
+        body: (style) => `目前收錄台中已核實店家。篩選會對應到「${style}」較廣義的湯型、濃淡與麵感輪廓，不代表每間店都有該風格；請以官方資訊確認。`,
         region: '縣市',
-        style: '拉麵分類',
+        style: '問卷風格輪廓',
         search: '搜尋店名、地址或商圈',
         allStyles: '全部類型',
         resultCount: (count) => `${count} 間`,
@@ -178,13 +188,12 @@ export const dictionaries: Record<Locale, Dictionary> = {
         loading: '地圖資料載入中',
         mapLoadFailed: '地圖資料暫時載入失敗，請重新整理再試一次。',
         mapUnavailable: '測試環境不載入互動地圖，但店家列表仍可檢查。',
-        selectedStyle: (style) => `目前分類：${style}`,
-        rating: '評分',
-        reviews: (count) => `${count.toLocaleString('zh-TW')} 則評論`,
-        price: '價格',
+        selectedStyle: (style) => `目前口味輪廓：${style}`,
         address: '地址',
-        openMap: '開 Google Maps',
-        officialSite: '官方網站',
+        verified: (date) => `核實日期 ${date}`,
+        checkOfficialHours: '營業時間請查看店家官方資訊',
+        openMap: '查看地圖',
+        officialInfo: '官方資訊',
         dataNote: (date) => `資料更新：${date}`,
       },
       tierNotes: {
@@ -239,6 +248,10 @@ export const dictionaries: Record<Locale, Dictionary> = {
       start: 'Start',
       continue: 'Continue',
       clear: 'Clear saved answers',
+      language: 'Language',
+      skipToContent: 'Skip to main content',
+      opensInNewTab: (label) => `${label} (opens in new tab)`,
+      storageUnavailable: 'This browser cannot save progress locally. You can continue, but a refresh will not keep your answers.',
     },
     questionUi: {
       step: (current, total) => `Step ${current} / ${total}`,
@@ -274,10 +287,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyTitle: 'Nearby alternatives',
       nearbyBody: 'These styles also scored well, but their format differs from your first choice.',
       map: {
-        title: 'Where to eat nearby',
-        body: (style) => `The map starts from the current ${style} classification and keeps the shop data as-is.`,
+        eyebrow: 'Ramen finder map',
+        title: 'Taichung ramen map',
+        body: (style) => `This map currently contains verified Taichung shops. The ${style} filter maps to a broader broth, richness, and noodle profile; it does not mean every shop serves that exact style. Confirm with official information.`,
         region: 'Region',
-        style: 'Ramen style',
+        style: 'Questionnaire flavor profile',
         search: 'Search name, address, or area',
         allStyles: 'All types',
         resultCount: (count) => `${count} shops`,
@@ -285,13 +299,12 @@ export const dictionaries: Record<Locale, Dictionary> = {
         loading: 'Loading map data',
         mapLoadFailed: 'Map data failed to load. Refresh and try again.',
         mapUnavailable: 'Interactive maps are skipped in tests, but the shop list is still rendered.',
-        selectedStyle: (style) => `Current style: ${style}`,
-        rating: 'Rating',
-        reviews: (count) => `${count.toLocaleString('en')} reviews`,
-        price: 'Price',
+        selectedStyle: (style) => `Current flavor profile: ${style}`,
         address: 'Address',
-        openMap: 'Open Google Maps',
-        officialSite: 'Official site',
+        verified: (date) => `Verified ${date}`,
+        checkOfficialHours: 'Check official information for current opening hours',
+        openMap: 'View map',
+        officialInfo: 'Official information',
         dataNote: (date) => `Updated: ${date}`,
       },
       tierNotes: {
@@ -388,7 +401,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       },
       exclusions: {
         title: 'Q8. Any allergies or strict no-go ingredients?',
-        description: 'This only avoids ingredients you cannot eat; it does not add score to any style.',
+        description: 'This only excludes ingredients labelled in this dataset. For allergies or strict restrictions, confirm with the shop; it does not add score to any style.',
       },
     },
     options: {},
@@ -435,6 +448,10 @@ export const dictionaries: Record<Locale, Dictionary> = {
       start: '診断を始める',
       continue: '続きから回答',
       clear: '保存を削除',
+      language: '言語',
+      skipToContent: 'メインコンテンツへ移動',
+      opensInNewTab: (label) => `${label}（新しいタブで開く）`,
+      storageUnavailable: 'このブラウザでは回答を保存できません。続けられますが、再読み込み後に回答は残りません。',
     },
     questionUi: {
       step: (current, total) => `Step ${current} / ${total}`,
@@ -470,10 +487,11 @@ export const dictionaries: Record<Locale, Dictionary> = {
       nearbyTitle: '近い代替案',
       nearbyBody: 'これらも高得点ですが、最初に選んだ提供形式と異なるため主推薦には入れていません。',
       map: {
-        title: '近くで食べるなら',
-        body: (style) => `まず現在の「${style}」分類で地図を絞り込みます。店舗データはそのまま使います。`,
+        eyebrow: 'ラーメンマップ',
+        title: '台中ラーメンマップ',
+        body: (style) => `現在は台中で確認済みの店舗を掲載しています。「${style}」の絞り込みは、より広いスープ・濃さ・麺の輪郭への対応であり、すべての店がそのスタイルを提供する意味ではありません。公式情報をご確認ください。`,
         region: '地域',
-        style: 'ラーメン分類',
+        style: '診断の味わい輪郭',
         search: '店名、住所、エリアを検索',
         allStyles: 'すべてのタイプ',
         resultCount: (count) => `${count} 件`,
@@ -481,13 +499,12 @@ export const dictionaries: Record<Locale, Dictionary> = {
         loading: '地図データを読み込み中',
         mapLoadFailed: '地図データを読み込めませんでした。再読み込みしてください。',
         mapUnavailable: 'テスト環境ではインタラクティブ地図を読み込みませんが、店舗リストは確認できます。',
-        selectedStyle: (style) => `現在の分類：${style}`,
-        rating: '評価',
-        reviews: (count) => `${count.toLocaleString('ja-JP')} 件の口コミ`,
-        price: '価格',
+        selectedStyle: (style) => `現在の味わい輪郭：${style}`,
         address: '住所',
-        openMap: 'Google Maps を開く',
-        officialSite: '公式サイト',
+        verified: (date) => `確認日 ${date}`,
+        checkOfficialHours: '営業時間は公式情報をご確認ください',
+        openMap: '地図を見る',
+        officialInfo: '公式情報',
         dataNote: (date) => `データ更新：${date}`,
       },
       tierNotes: {
@@ -584,7 +601,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       },
       exclusions: {
         title: 'Q8. アレルギーや絶対に避けたい食材はありますか？',
-        description: '食べられない食材を避けるためだけに使い、どのスタイルにも加点しません。',
+        description: 'このデータに表示された食材だけを除外します。アレルギーや厳格な制限は店舗にも確認してください。どのスタイルにも加点しません。',
       },
     },
     options: {},
@@ -1032,11 +1049,18 @@ export function localizeStyle(
   result: RankedStyle,
   locale: Locale,
 ) {
-  const translated = dictionaries[locale].styles[result.style.id]
+  return localizeStyleDefinition(result.style, locale)
+}
+
+export function localizeStyleDefinition(
+  style: Pick<StyleDefinition, 'id' | 'label' | 'summary'>,
+  locale: Locale,
+) {
+  const translated = dictionaries[locale].styles[style.id]
 
   return {
-    label: translated?.label ?? result.style.label,
-    summary: translated?.summary ?? result.style.summary,
+    label: translated?.label ?? style.label,
+    summary: translated?.summary ?? style.summary,
   }
 }
 

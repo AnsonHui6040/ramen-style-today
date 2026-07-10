@@ -6211,7 +6211,9 @@
     "summary": "味噌、黃色中太捲麵與玉米奶油是最穩定的札幌路徑。",
     "family": "soup",
     "accent": "#c27e2e",
-    "ingredients": [],
+    "ingredients": [
+      "dairy"
+    ],
     "coreTypes": [
       {
         "id": "sapporo:clean",

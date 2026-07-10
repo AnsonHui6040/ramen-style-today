@@ -22,7 +22,7 @@ describe('ResultsPanel', () => {
     expect(screen.getByRole('heading', { name: '今天先吃 家系' })).toBeInTheDocument()
     expect(screen.getByText('横浜家系ラーメン大和家')).toBeInTheDocument()
     expect(screen.getByText('631ラーメン 醤油')).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: '官方頁面' })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: '官方頁面（在新分頁開啟）' })[0]).toHaveAttribute(
       'href',
       'https://iekei-yamatoya.com/menu',
     )
@@ -46,5 +46,24 @@ describe('ResultsPanel', () => {
     expect(screen.getByText('有一碗本來很合，但被避開了')).toBeInTheDocument()
     expect(screen.getByText(/家系 原本也很接近/)).toBeInTheDocument()
     expect(screen.getByText(/標記了 豬/)).toBeInTheDocument()
+  })
+
+  test('keeps safe format-changing alternatives visible when all primary results are filtered out', () => {
+    const outcome = enrichScoringOutcome(scoreQuestionnaire(conflictFixtures.fishBlockedKonbusui))
+
+    expect(outcome.results).toHaveLength(0)
+    expect(outcome.alternativeResults.length).toBeGreaterThan(0)
+
+    render(
+      <ResultsPanel
+        outcome={outcome}
+        locale="zh-TW"
+        onRestart={vi.fn()}
+        onReviewAnswers={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: '沒有可顯示的結果' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '相近替代' })).toBeInTheDocument()
   })
 })

@@ -81,6 +81,16 @@ export const conflictFixtures = {
     ...canonicalFixtures.konbusui,
     exclusions: ['fish-seafood'],
   }),
+  dairyBlockedSapporo: complete({
+    form: 'soup',
+    archetype: 'paitan',
+    tare: 'miso',
+    source: ['pork'],
+    body: 'rich',
+    noodle: 'medium-thick-wavy',
+    signature: ['corn-butter'],
+    exclusions: ['dairy'],
+  }),
 } satisfies Record<string, CompletedAnswers>
 
 export const normalizationFixture: UserAnswers = {

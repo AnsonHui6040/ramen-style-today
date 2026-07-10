@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest'
 
 import { toCompletedAnswers } from '../../../domain/schema'
-import { scoreQuestionnaire } from '../../../lib/scoring/scorer'
+import type { UserAnswers } from '../../../domain/types'
+import { capRulePoints, scoreQuestionnaire } from '../../../lib/scoring/scorer'
 import {
   canonicalFixtures,
   conflictFixtures,
@@ -55,6 +56,13 @@ describe('scoreQuestionnaire canonical pathways', () => {
   })
 })
 
+describe('rule point caps', () => {
+  test('caps an additional rule at the remaining score budget', () => {
+    expect(capRulePoints(10, 10, 15)).toBe(5)
+    expect(capRulePoints(10, 15, 15)).toBe(0)
+  })
+})
+
 describe('scoreQuestionnaire conflicts and filters', () => {
   test('Jiro with yuzu applies the explicit conflict penalty', () => {
     const outcome = scoreQuestionnaire(conflictFixtures.jiroWithYuzu)
@@ -97,6 +105,14 @@ describe('scoreQuestionnaire conflicts and filters', () => {
     expect(outcome.blockedLead?.blockedBy).toEqual(['fish-seafood'])
     expect(outcome.results.every((result) => result.blockedBy.length === 0)).toBe(true)
   })
+
+  test('dairy exclusion blocks the corn-butter Sapporo style', () => {
+    const outcome = scoreQuestionnaire(conflictFixtures.dairyBlockedSapporo)
+
+    expect(outcome.blockedLead?.style.id).toBe('sapporo')
+    expect(outcome.blockedLead?.blockedBy).toEqual(['dairy'])
+    expect(outcome.results.every((result) => result.style.id !== 'sapporo')).toBe(true)
+  })
 })
 
 describe('answer normalization guards', () => {
@@ -107,5 +123,49 @@ describe('answer normalization guards', () => {
     expect(completed?.source).toEqual(['pork'])
     expect(completed?.signature).toEqual(['nori-spinach'])
     expect(completed?.exclusions).toEqual(['pork'])
+  })
+
+  test('migrates the legacy seafood exclusion into granular current exclusions', () => {
+    const legacyAnswers = {
+      ...canonicalFixtures.konbusui,
+      exclusions: ['seafood'],
+    } as unknown as UserAnswers
+
+    expect(toCompletedAnswers(legacyAnswers)?.exclusions).toEqual([
+      'fish-seafood',
+      'shellfish',
+      'shrimp-crab',
+    ])
+  })
+
+  test('rejects malformed persisted option values rather than scoring them', () => {
+    const malformed = {
+      ...canonicalFixtures.iekei,
+      tare: 'not-a-tare',
+      source: ['not-a-source'],
+      signature: ['not-a-signature'],
+    } as unknown as UserAnswers
+
+    expect(toCompletedAnswers(malformed)).toBeNull()
+  })
+
+  test('rejects persisted answers that bypass an archetype branch or multi-select cap', () => {
+    const incompatibleBranch = {
+      ...canonicalFixtures.konbusui,
+      archetype: 'miso-rich',
+      tare: 'shoyu',
+    } as unknown as UserAnswers
+    const overSourceCap = {
+      ...canonicalFixtures.iekei,
+      source: ['pork', 'chicken', 'duck'],
+    } as unknown as UserAnswers
+    const overSignatureCap = {
+      ...canonicalFixtures.iekei,
+      signature: ['nori-spinach', 'corn-butter', 'fish-kombu'],
+    } as unknown as UserAnswers
+
+    expect(toCompletedAnswers(incompatibleBranch)).toBeNull()
+    expect(toCompletedAnswers(overSourceCap)).toBeNull()
+    expect(toCompletedAnswers(overSignatureCap)).toBeNull()
   })
 })

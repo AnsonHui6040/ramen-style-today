@@ -412,8 +412,8 @@
   },
   {
     "id": "exclusions",
-    "title": "Q8. 有過敏或一定不吃的嗎？",
-    "description": "這題只用來避開不能吃的食材，不會拿來幫任何風格加分。",
+    "title": "Q8. 有沒有過敏或嚴格不吃的食材？",
+    "description": "只會排除資料庫已標註的食材；過敏或嚴格忌口請仍向店家確認，不會替任何風格加分。",
     "selectionType": "multiple",
     "minSelections": 1,
     "maxSelections": 8,

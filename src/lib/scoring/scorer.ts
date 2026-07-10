@@ -19,6 +19,14 @@ const weightByQuestion = new Map(
   questionBank.map((question) => [question.id, question.weight]),
 )
 
+export function capRulePoints(
+  requestedPoints: number,
+  accumulatedPoints: number,
+  maximumPoints: number,
+) {
+  return Math.min(requestedPoints, Math.max(0, maximumPoints - accumulatedPoints))
+}
+
 function roundScore(value: number) {
   return Math.round(value * 10) / 10
 }
@@ -80,13 +88,18 @@ function computeBonuses(style: StyleDefinition, answers: CompletedAnswers) {
     }
 
     const ratio = matched / rule.conditions.length
-    const awarded = roundScore(rule.points * ratio)
+    const awarded = capRulePoints(roundScore(rule.points * ratio), points, 5)
+
+    if (awarded === 0) {
+      continue
+    }
+
     points += awarded
     reasons.push(`${rule.label} +${awarded}`)
   }
 
   return {
-    points: Math.min(points, 5),
+    points,
     reasons,
   }
 }
@@ -105,12 +118,18 @@ function computePenalties(coreType: CoreTypeDefinition, answers: CompletedAnswer
       continue
     }
 
-    points += rule.penalty
-    reasons.push(`${rule.label} -${rule.penalty}`)
+    const penalty = capRulePoints(rule.penalty, points, 15)
+
+    if (penalty === 0) {
+      continue
+    }
+
+    points += penalty
+    reasons.push(`${rule.label} -${penalty}`)
   }
 
   return {
-    points: Math.min(points, 15),
+    points,
     reasons,
   }
 }

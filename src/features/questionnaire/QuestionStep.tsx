@@ -1,3 +1,4 @@
+import type { RefObject } from 'react'
 import type { ChoiceOption, FormOption, QuestionDefinition } from '../../domain/types'
 import { getDictionary, type Locale } from '../../i18n'
 
@@ -11,6 +12,7 @@ interface QuestionStepProps {
   totalSteps: number
   canContinue: boolean
   isLast: boolean
+  headingRef: RefObject<HTMLHeadingElement | null>
   onSelect: (value: string) => void
   onBack: () => void
   onContinue: () => void
@@ -26,6 +28,7 @@ export function QuestionStep({
   totalSteps,
   canContinue,
   isLast,
+  headingRef,
   onSelect,
   onBack,
   onContinue,
@@ -41,6 +44,7 @@ export function QuestionStep({
   const selectionCapReached =
     question.selectionType === 'multiple' &&
     selectedValues.length >= question.maxSelections
+  const selectionMetaId = `selection-meta-${question.id}`
 
   return (
     <section className="question-card">
@@ -49,13 +53,18 @@ export function QuestionStep({
         <div className="progress-track" aria-hidden="true">
           <span style={{ width: `${(stepNumber / totalSteps) * 100}%` }} />
         </div>
-        <h2>{questionCopy?.title ?? question.title}</h2>
+        <h2 ref={headingRef} tabIndex={-1}>{questionCopy?.title ?? question.title}</h2>
         <p className="question-description">
           {questionCopy?.description ?? question.description}
         </p>
       </header>
 
-      <div className="choice-grid">
+      <div
+        className="choice-grid"
+        role="group"
+        aria-label={questionCopy?.title ?? question.title}
+        aria-describedby={selectionMetaId}
+      >
         {options.map((option) => {
           const selected = selectedValues.includes(option.value)
           const disabled =
@@ -70,6 +79,7 @@ export function QuestionStep({
               type="button"
               className={`choice-card${selected ? ' selected' : ''}`}
               aria-pressed={selected}
+              aria-describedby={selectionMetaId}
               disabled={disabled}
               onClick={() => onSelect(option.value)}
             >
@@ -83,7 +93,7 @@ export function QuestionStep({
       </div>
 
       <footer className="question-footer">
-        <div className="selection-meta">
+        <div id={selectionMetaId} className="selection-meta" role="status" aria-live="polite">
           {question.selectionType === 'multiple'
             ? dictionary.questionUi.multipleMeta(question.maxSelections, selectedValues.length)
             : dictionary.questionUi.singleMeta}

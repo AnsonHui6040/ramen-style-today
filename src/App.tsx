@@ -1,10 +1,9 @@
-import { startTransition, useEffect, useState } from 'react'
+import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import './App.css'
 import { questionBank, resolveQuestionOptions } from './config/questions'
 import { QuestionStep } from './features/questionnaire/QuestionStep'
 import { ResultsPanel } from './features/results/ResultsPanel'
-import { toCompletedAnswers } from './domain/schema'
-import { exclusionValues } from './domain/types'
+import { restoreUserAnswers, toCompletedAnswers } from './domain/schema'
 import type {
   QuestionId,
   ScoringOutcome,
@@ -30,11 +29,21 @@ interface StoredState {
 }
 
 const STORAGE_KEY = 'ramen-style-today.state.v1'
+const storageAvailabilityListeners = new Set<() => void>()
+let storageIsAvailable = true
 
-const initialAnswers: UserAnswers = {
-  source: [],
-  signature: [],
-  exclusions: ['none'],
+function createInitialAnswers(): UserAnswers {
+  return {
+    source: [],
+    signature: [],
+    exclusions: ['none'],
+  }
+}
+
+const localeLanguageTags: Record<Locale, string> = {
+  'zh-TW': 'zh-Hant-TW',
+  en: 'en',
+  ja: 'ja',
 }
 
 function isLocale(value: unknown): value is Locale {
@@ -53,34 +62,72 @@ function getStorage() {
   }
 }
 
-function restoreExclusions(values: unknown): UserAnswers['exclusions'] {
-  if (!Array.isArray(values) || !values.length) {
-    return ['none']
+function isStoredState(value: unknown): value is Partial<StoredState> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function getStoredStepIndex(value: unknown) {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0
+    ? Math.min(value, questionBank.length - 1)
+    : 0
+}
+
+function saveStoredState(snapshot: StoredState) {
+  const storage = getStorage()
+
+  if (!storage) {
+    return false
   }
 
-  const migratedValues = values.flatMap((value) =>
-    value === 'seafood'
-      ? ['fish-seafood', 'shellfish', 'shrimp-crab']
-      : [value],
-  )
-  const validValues = migratedValues.filter((value): value is UserAnswers['exclusions'][number] =>
-    exclusionValues.includes(value as UserAnswers['exclusions'][number]),
-  )
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+    return true
+  } catch {
+    return false
+  }
+}
 
-  if (!validValues.length) {
-    return ['none']
+function clearStoredState() {
+  const storage = getStorage()
+
+  if (!storage) {
+    return false
   }
 
-  return validValues.includes('none') && validValues.length > 1
-    ? validValues.filter((value) => value !== 'none')
-    : validValues
+  try {
+    storage.removeItem(STORAGE_KEY)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function subscribeToStorageAvailability(listener: () => void) {
+  storageAvailabilityListeners.add(listener)
+
+  return () => {
+    storageAvailabilityListeners.delete(listener)
+  }
+}
+
+function getStorageAvailabilitySnapshot() {
+  return storageIsAvailable
+}
+
+function reportStorageAvailability(isAvailable: boolean) {
+  if (storageIsAvailable === isAvailable) {
+    return
+  }
+
+  storageIsAvailable = isAvailable
+  storageAvailabilityListeners.forEach((listener) => listener())
 }
 
 function readStoredState(): StoredState {
   const fallback: StoredState = {
     phase: 'intro',
     stepIndex: 0,
-    answers: initialAnswers,
+    answers: createInitialAnswers(),
     locale: 'zh-TW',
   }
 
@@ -96,22 +143,30 @@ function readStoredState(): StoredState {
       return fallback
     }
 
-    const parsed = JSON.parse(raw) as Partial<StoredState>
+    const parsed: unknown = JSON.parse(raw)
+
+    if (!isStoredState(parsed)) {
+      return fallback
+    }
+
+    const answers = restoreUserAnswers(parsed.answers)
+    const phase = parsed.phase === 'questions' || parsed.phase === 'results'
+      ? parsed.phase
+      : 'intro'
 
     const restoredState: StoredState = {
-      phase: parsed.phase === 'questions' || parsed.phase === 'results' ? parsed.phase : 'intro',
-      stepIndex:
-        typeof parsed.stepIndex === 'number' && parsed.stepIndex >= 0
-          ? parsed.stepIndex
-          : 0,
+      phase,
+      stepIndex: getStoredStepIndex(parsed.stepIndex),
       locale: isLocale(parsed.locale) ? parsed.locale : 'zh-TW',
-      answers: {
-        ...initialAnswers,
-        ...parsed.answers,
-        source: parsed.answers?.source ?? [],
-        signature: parsed.answers?.signature ?? [],
-        exclusions: restoreExclusions(parsed.answers?.exclusions),
-      },
+      answers,
+    }
+
+    if (restoredState.phase === 'results' && !toCompletedAnswers(restoredState.answers)) {
+      return {
+        ...fallback,
+        answers: restoredState.answers,
+        locale: restoredState.locale,
+      }
     }
 
     if (restoredState.phase !== 'questions') {
@@ -265,7 +320,7 @@ function getPreviousInteractiveStep(stepIndex: number, answers: UserAnswers) {
 }
 
 function App() {
-  const storedState = readStoredState()
+  const [storedState] = useState(readStoredState)
   const [phase, setPhase] = useState<AppPhase>(storedState.phase)
   const [stepIndex, setStepIndex] = useState(
     Math.min(storedState.stepIndex, questionBank.length - 1),
@@ -278,14 +333,18 @@ function App() {
       ? enrichScoringOutcome(scoreQuestionnaire(completed))
       : null
   })
+  const storageUnavailable = !useSyncExternalStore(
+    subscribeToStorageAvailability,
+    getStorageAvailabilitySnapshot,
+    getStorageAvailabilitySnapshot,
+  )
+  const introHeadingRef = useRef<HTMLHeadingElement>(null)
+  const questionHeadingRef = useRef<HTMLHeadingElement>(null)
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null)
+  const shouldMoveFocus = useRef(false)
+  const dictionary = getDictionary(locale)
 
   useEffect(() => {
-    const storage = getStorage()
-
-    if (!storage) {
-      return
-    }
-
     const snapshot: StoredState = {
       phase,
       stepIndex,
@@ -293,8 +352,28 @@ function App() {
       locale,
     }
 
-    storage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+    reportStorageAvailability(saveStoredState(snapshot))
   }, [answers, locale, phase, stepIndex])
+
+  useEffect(() => {
+    document.documentElement.lang = localeLanguageTags[locale]
+    document.title = `Ramen Style Today — ${dictionary.app.headline}`
+  }, [dictionary.app.headline, locale])
+
+  useEffect(() => {
+    if (!shouldMoveFocus.current) {
+      return
+    }
+
+    const target = phase === 'intro'
+      ? introHeadingRef.current
+      : phase === 'questions'
+        ? questionHeadingRef.current
+        : resultsHeadingRef.current
+
+    target?.focus()
+    shouldMoveFocus.current = false
+  }, [phase, stepIndex])
 
   const currentQuestion = questionBank[stepIndex]
   const currentOptions = currentQuestion
@@ -448,6 +527,7 @@ function App() {
       }
 
       startTransition(() => {
+        shouldMoveFocus.current = true
         setOutcome(enrichScoringOutcome(scoreQuestionnaire(completed)))
         setPhase('results')
       })
@@ -455,6 +535,7 @@ function App() {
     }
 
     const nextState = applyForcedAnswersFromStep(answers, stepIndex + 1)
+    shouldMoveFocus.current = true
 
     if (nextState.answers !== answers) {
       setAnswers(nextState.answers)
@@ -464,6 +545,8 @@ function App() {
   }
 
   function handleBack() {
+    shouldMoveFocus.current = true
+
     if (phase === 'questions' && stepIndex === 0) {
       setPhase('intro')
       return
@@ -473,32 +556,34 @@ function App() {
   }
 
   function startFlow() {
+    shouldMoveFocus.current = true
     setPhase('questions')
   }
 
   function reviewAnswers() {
+    shouldMoveFocus.current = true
     setPhase('questions')
     setStepIndex(0)
   }
 
   function restart() {
-    const storage = getStorage()
-
-    setAnswers(initialAnswers)
+    shouldMoveFocus.current = true
+    setAnswers(createInitialAnswers())
     setOutcome(null)
     setStepIndex(0)
     setPhase('intro')
-    storage?.removeItem(STORAGE_KEY)
+    reportStorageAvailability(clearStoredState())
   }
 
   const answeredCount = questionBank.filter((question) => {
     const values = getSelectedValues(question.id, answers)
     return hasMeaningfulAnswer(question.id, values)
   }).length
-  const dictionary = getDictionary(locale)
-
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        {dictionary.app.skipToContent}
+      </a>
       <header className="app-header">
         <div>
           <p className="eyebrow">Ramen Style Today</p>
@@ -507,7 +592,7 @@ function App() {
             {dictionary.app.lede}
           </p>
         </div>
-        <div className="locale-switcher" aria-label="Language">
+        <div className="locale-switcher" aria-label={dictionary.app.language}>
           {locales.map((candidate) => (
             <button
               key={candidate}
@@ -527,76 +612,86 @@ function App() {
         </div>
       </header>
 
-      {phase === 'intro' ? (
-        <section className="intro-panel">
-          <div className="intro-copy">
-            <h2>{dictionary.app.introTitle}</h2>
-            <p>
-              {dictionary.app.introBody}
-            </p>
-            <div className="intro-stats">
-              <div>
-                <strong>7-8</strong>
-                <span>{dictionary.app.statSteps}</span>
-              </div>
-              <div>
-                <strong>{answeredCount}</strong>
-                <span>{dictionary.app.statSaved}</span>
-              </div>
-              <div>
-                <strong>{dictionary.app.statWeightValue}</strong>
-                <span>{dictionary.app.statWeight}</span>
+      <main id="main-content" tabIndex={-1}>
+        {storageUnavailable ? (
+          <p className="storage-notice" role="status">
+            {dictionary.app.storageUnavailable}
+          </p>
+        ) : null}
+
+        {phase === 'intro' ? (
+          <section className="intro-panel">
+            <div className="intro-copy">
+              <h2 ref={introHeadingRef} tabIndex={-1}>{dictionary.app.introTitle}</h2>
+              <p>
+                {dictionary.app.introBody}
+              </p>
+              <div className="intro-stats">
+                <div>
+                  <strong>7-8</strong>
+                  <span>{dictionary.app.statSteps}</span>
+                </div>
+                <div>
+                  <strong>{answeredCount}</strong>
+                  <span>{dictionary.app.statSaved}</span>
+                </div>
+                <div>
+                  <strong>{dictionary.app.statWeightValue}</strong>
+                  <span>{dictionary.app.statWeight}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <aside className="intro-card">
-            <h3>{dictionary.app.implementedTitle}</h3>
-            <ul>
-              {dictionary.app.implemented.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <aside className="intro-card">
+              <h3>{dictionary.app.implementedTitle}</h3>
+              <ul>
+                {dictionary.app.implemented.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
 
-            <div className="question-actions align-left">
-              <button type="button" className="primary-button" onClick={startFlow}>
-                {answeredCount > 0 ? dictionary.app.continue : dictionary.app.start}
-              </button>
-              {answeredCount > 0 ? (
-                <button type="button" className="secondary-button" onClick={restart}>
-                  {dictionary.app.clear}
+              <div className="question-actions align-left">
+                <button type="button" className="primary-button" onClick={startFlow}>
+                  {answeredCount > 0 ? dictionary.app.continue : dictionary.app.start}
                 </button>
-              ) : null}
-            </div>
-          </aside>
-        </section>
-      ) : null}
+                {answeredCount > 0 ? (
+                  <button type="button" className="secondary-button" onClick={restart}>
+                    {dictionary.app.clear}
+                  </button>
+                ) : null}
+              </div>
+            </aside>
+          </section>
+        ) : null}
 
-      {phase === 'questions' && currentQuestion && currentQuestionView ? (
-        <QuestionStep
-          question={currentQuestionView}
-          options={currentOptionsView}
-          form={answers.form}
-          locale={locale}
-          selectedValues={selectedValues}
-          stepNumber={stepIndex + 1}
-          totalSteps={questionBank.length}
-          canContinue={Boolean(canContinue)}
-          isLast={stepIndex === questionBank.length - 1}
-          onSelect={handleSelect}
-          onBack={handleBack}
-          onContinue={handleContinue}
-        />
-      ) : null}
+        {phase === 'questions' && currentQuestion && currentQuestionView ? (
+          <QuestionStep
+            question={currentQuestionView}
+            options={currentOptionsView}
+            form={answers.form}
+            locale={locale}
+            selectedValues={selectedValues}
+            stepNumber={stepIndex + 1}
+            totalSteps={questionBank.length}
+            canContinue={Boolean(canContinue)}
+            isLast={stepIndex === questionBank.length - 1}
+            headingRef={questionHeadingRef}
+            onSelect={handleSelect}
+            onBack={handleBack}
+            onContinue={handleContinue}
+          />
+        ) : null}
 
-      {phase === 'results' && outcome ? (
-        <ResultsPanel
-          outcome={outcome}
-          locale={locale}
-          onRestart={restart}
-          onReviewAnswers={reviewAnswers}
-        />
-      ) : null}
+        {phase === 'results' && outcome ? (
+          <ResultsPanel
+            outcome={outcome}
+            locale={locale}
+            headingRef={resultsHeadingRef}
+            onRestart={restart}
+            onReviewAnswers={reviewAnswers}
+          />
+        ) : null}
+      </main>
     </div>
   )
 }

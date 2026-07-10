@@ -3,60 +3,28 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 import { styleCatalog } from '../../config/styles'
+import {
+  filterFinderShops,
+  getPopulatedFinderRegions,
+  toSafeHttpsUrl,
+  type FinderMeta,
+  type FinderRegion,
+  type FinderRegionData,
+  type FinderShop,
+} from '../../domain/ramenMap'
 import type { RankedStyle } from '../../domain/types'
-import { getDictionary, localizeStyle, type Locale } from '../../i18n'
-
-interface FinderRegion {
-  region: string
-  regionCode: string
-  shopCount: number
-  dataPath: string
-  defaultMap?: FinderMapPosition
-}
-
-interface FinderMeta {
-  regions: FinderRegion[]
-}
-
-interface FinderMapPosition {
-  lat: number
-  lng: number
-  zoom?: number
-}
-
-interface FinderRegionData {
-  region: string
-  regionCode: string
-  updatedAt: string
-  defaultMap?: FinderMapPosition
-  shops: FinderShop[]
-}
-
-interface FinderShop {
-  shopId: string
-  name: string
-  nameOriginal?: string
-  styleCode?: string
-  style4char?: string
-  styleFamily?: string
-  rating?: number
-  ratingCount?: number
-  priceRangeLabel?: string
-  address?: string
-  district?: string
-  areaTag?: string
-  lat?: number
-  lng?: number
-  openHours?: string
-  website?: string
-  mapUrl?: string
-  notes?: string
-  lastVerified?: string
-}
+import {
+  getDictionary,
+  localizeStyle,
+  localizeStyleDefinition,
+  type Locale,
+} from '../../i18n'
+import { createShopPopupContent } from './mapPopupContent'
 
 interface RamenFinderMapProps {
   result: RankedStyle
   locale: Locale
+  initialRegionData?: FinderRegionData
 }
 
 const DATA_ROOT = `${import.meta.env.BASE_URL}ramen-map/data`
@@ -99,31 +67,18 @@ function getUpdatedDate(value: string, locale: Locale) {
   return date.toLocaleDateString(locale)
 }
 
-function shopSearchText(shop: FinderShop) {
-  return [
-    shop.name,
-    shop.nameOriginal,
-    shop.address,
-    shop.district,
-    shop.areaTag,
-    shop.styleCode,
-    shop.style4char,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
-}
-
 function getShopLabel(shop: FinderShop) {
-  return [shop.styleCode, shop.style4char].filter(Boolean).join(' | ')
+  return [shop.style4char, shop.styleFamily].join(' · ')
 }
 
 function getFinderCodesForCurrentStyle(styleId: string) {
   return CURRENT_STYLE_TO_FINDER_CODES[styleId] ?? []
 }
 
-function getCurrentStyleLabel(styleId: string) {
-  return styleCatalog.find((style) => style.id === styleId)?.label ?? styleId
+function getCurrentStyleLabel(styleId: string, locale: Locale) {
+  const style = styleCatalog.find((candidate) => candidate.id === styleId)
+
+  return style ? localizeStyleDefinition(style, locale).label : styleId
 }
 
 async function fetchMapJson<T>(path: string) {
@@ -136,7 +91,11 @@ async function fetchMapJson<T>(path: string) {
   return response.json() as Promise<T>
 }
 
-export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
+export function RamenFinderMap({
+  result,
+  locale,
+  initialRegionData,
+}: RamenFinderMapProps) {
   const dictionary = getDictionary(locale)
   const copy = dictionary.results.map
   const localizedResult = localizeStyle(result, locale)
@@ -144,7 +103,9 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   const isTestMode = import.meta.env.MODE === 'test'
   const [meta, setMeta] = useState<FinderMeta | null>(null)
   const [regionCode, setRegionCode] = useState(DEFAULT_REGION)
-  const [regionData, setRegionData] = useState<FinderRegionData | null>(null)
+  const [regionData, setRegionData] = useState<FinderRegionData | null>(
+    initialRegionData ?? null,
+  )
   const [currentStyleId, setCurrentStyleId] = useState(initialCurrentStyleId)
   const [query, setQuery] = useState('')
   const [selectedShopId, setSelectedShopId] = useState<string>('')
@@ -154,7 +115,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   const markersLayerRef = useRef<L.LayerGroup | null>(null)
 
   useEffect(() => {
-    if (isTestMode) {
+    if (isTestMode || initialRegionData) {
       return
     }
 
@@ -180,10 +141,10 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
     return () => {
       ignore = true
     }
-  }, [isTestMode])
+  }, [initialRegionData, isTestMode])
 
   useEffect(() => {
-    if (isTestMode) {
+    if (isTestMode || initialRegionData) {
       return
     }
 
@@ -214,22 +175,27 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
     return () => {
       ignore = true
     }
-  }, [isTestMode, regionCode])
+  }, [initialRegionData, isTestMode, regionCode])
 
   const filteredShops = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
     const finderCodes = getFinderCodesForCurrentStyle(currentStyleId)
 
-    return (regionData?.shops ?? [])
-      .filter((shop) => !currentStyleId || finderCodes.includes(shop.styleCode ?? ''))
-      .filter((shop) => !normalizedQuery || shopSearchText(shop).includes(normalizedQuery))
-      .sort((left, right) => (right.rating ?? 0) - (left.rating ?? 0))
+    return filterFinderShops(
+      regionData?.shops ?? [],
+      currentStyleId ? finderCodes : [],
+      query,
+    )
   }, [currentStyleId, query, regionData])
 
   const selectedShop = filteredShops.find((shop) => shop.shopId === selectedShopId) ?? filteredShops[0]
-  const selectedStyleLabel = currentStyleId ? getCurrentStyleLabel(currentStyleId) : copy.allStyles
+  const selectedShopMapUrl = selectedShop ? toSafeHttpsUrl(selectedShop.mapUrl) : null
+  const selectedShopWebsite = selectedShop ? toSafeHttpsUrl(selectedShop.website) : null
+  const selectedStyleLabel = currentStyleId
+    ? getCurrentStyleLabel(currentStyleId, locale)
+    : copy.allStyles
   const hasInteractiveMap = !isTestMode
-  const regionOptions = meta?.regions.length ? meta.regions : [FALLBACK_REGION]
+  const populatedRegions = getPopulatedFinderRegions(meta?.regions ?? [])
+  const regionOptions = populatedRegions.length ? populatedRegions : [FALLBACK_REGION]
 
   useEffect(() => {
     if (!hasInteractiveMap || !mapNodeRef.current || mapRef.current) {
@@ -281,11 +247,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
         fillColor: shop.shopId === selectedShop?.shopId ? '#c56a32' : '#fff6ea',
         fillOpacity: 0.92,
         weight: 2,
-      }).bindPopup(`
-        <strong>${shop.name}</strong><br />
-        ${getShopLabel(shop)}<br />
-        ${shop.district ?? ''} ${shop.areaTag ? `・${shop.areaTag}` : ''}
-      `)
+      }).bindPopup(createShopPopupContent(shop))
 
       marker.on('click', () => {
         setSelectedShopId(shop.shopId)
@@ -306,7 +268,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
   return (
     <section className="finder-map-section">
       <div className="section-heading">
-        <p className="eyebrow">Ramen Finder Map</p>
+        <p className="eyebrow">{copy.eyebrow}</p>
         <h3>{copy.title}</h3>
         <p>{copy.body(localizedResult.label)}</p>
       </div>
@@ -331,7 +293,7 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
             <option value="">{copy.allStyles}</option>
             {styleCatalog.map((style) => (
               <option key={style.id} value={style.id}>
-                {style.label}
+                {localizeStyleDefinition(style, locale).label}
               </option>
             ))}
           </select>
@@ -375,20 +337,22 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
           </div>
 
           <div className="finder-shop-list">
-            {filteredShops.length ? filteredShops.slice(0, 8).map((shop) => (
+            {filteredShops.length ? filteredShops.map((shop) => (
               <button
                 key={shop.shopId}
                 type="button"
                 className={shop.shopId === selectedShop?.shopId ? 'finder-shop-card active' : 'finder-shop-card'}
+                aria-pressed={shop.shopId === selectedShop?.shopId}
+                aria-controls="finder-shop-detail"
                 onClick={() => setSelectedShopId(shop.shopId)}
               >
                 <span className="finder-shop-card__topline">
                   <strong>{shop.name}</strong>
-                  <span>{shop.styleCode}</span>
+                  <span>{shop.styleFamily}</span>
                 </span>
                 <span>{getShopLabel(shop)}</span>
                 <span>
-                  {copy.rating} {shop.rating ?? '-'} · {copy.reviews(shop.ratingCount ?? 0)}
+                  {copy.verified(getUpdatedDate(shop.verifiedAt, locale))}
                 </span>
                 <span>
                   {shop.district ?? regionData?.region}
@@ -405,25 +369,35 @@ export function RamenFinderMap({ result, locale }: RamenFinderMapProps) {
       </div>
 
       {selectedShop ? (
-        <article className="finder-shop-detail">
+        <article id="finder-shop-detail" className="finder-shop-detail" aria-live="polite">
           <div>
             <h4>{selectedShop.name}</h4>
             <p>{getShopLabel(selectedShop)}</p>
           </div>
           <div className="finder-shop-detail__facts">
-            <span>{copy.rating} {selectedShop.rating ?? '-'}</span>
-            <span>{copy.price} {selectedShop.priceRangeLabel ?? '-'}</span>
-            <span>{copy.address} {selectedShop.address ?? '-'}</span>
+            <span>{copy.address} {selectedShop.address}</span>
+            <span>{copy.verified(getUpdatedDate(selectedShop.verifiedAt, locale))}</span>
+            <span>{selectedShop.openHours ?? copy.checkOfficialHours}</span>
           </div>
           <div className="finder-shop-detail__links">
-            {selectedShop.mapUrl ? (
-              <a href={selectedShop.mapUrl} target="_blank" rel="noreferrer">
+            {selectedShopMapUrl ? (
+              <a
+                href={selectedShopMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={dictionary.app.opensInNewTab(copy.openMap)}
+              >
                 {copy.openMap}
               </a>
             ) : null}
-            {selectedShop.website ? (
-              <a href={selectedShop.website} target="_blank" rel="noreferrer">
-                {copy.officialSite}
+            {selectedShopWebsite ? (
+              <a
+                href={selectedShopWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={dictionary.app.opensInNewTab(copy.officialInfo)}
+              >
+                {copy.officialInfo}
               </a>
             ) : null}
           </div>

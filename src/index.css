@@ -103,6 +103,32 @@ a {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+h2[tabindex='-1']:focus-visible {
+  outline-width: 2px;
+  outline-offset: 5px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 @media (max-width: 720px) {
   :root {
     font-size: 16px;

@@ -1,7 +1,7 @@
+import { lazy, Suspense, type CSSProperties, type RefObject } from 'react'
 import { getOptionLabel } from '../../config/questions'
 import type { MenuItemDefinition } from '../../domain/catalog'
 import type { ScoringOutcome } from '../../domain/types'
-import { RamenFinderMap } from '../map/RamenFinderMap'
 import {
   formatCoreDescriptor,
   getDictionary,
@@ -15,6 +15,11 @@ import {
   localizeStyle,
   type Locale,
 } from '../../i18n'
+
+const RamenFinderMap = lazy(async () => {
+  const module = await import('../map/RamenFinderMap')
+  return { default: module.RamenFinderMap }
+})
 
 const currencyFormatters = {
   JPY: new Intl.NumberFormat('ja-JP', {
@@ -40,13 +45,52 @@ function formatItemPrice(item: MenuItemDefinition) {
 interface ResultsPanelProps {
   outcome: ScoringOutcome
   locale: Locale
+  headingRef?: RefObject<HTMLHeadingElement | null>
   onRestart: () => void
   onReviewAnswers: () => void
+}
+
+function AlternativeResults({
+  outcome,
+  locale,
+}: Pick<ResultsPanelProps, 'outcome' | 'locale'>) {
+  if (!outcome.alternativeResults.length) {
+    return null
+  }
+
+  const dictionary = getDictionary(locale)
+
+  return (
+    <section className="alternative-section">
+      <div className="section-heading">
+        <p className="eyebrow">{dictionary.results.nearbyEyebrow}</p>
+        <h3>{dictionary.results.nearbyTitle}</h3>
+        <p>{dictionary.results.nearbyBody}</p>
+      </div>
+
+      <div className="alternative-list">
+        {outcome.alternativeResults.map((result) => (
+          <article
+            key={result.coreType.id}
+            className="alternative-card"
+            style={{ '--accent-color': result.style.accent } as CSSProperties}
+          >
+            <div>
+              <h4>{localizeStyle(result, locale).label}</h4>
+              <p>{formatCoreDescriptor(result, locale)}</p>
+            </div>
+            <span>{result.confidence}%</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 export function ResultsPanel({
   outcome,
   locale,
+  headingRef,
   onRestart,
   onReviewAnswers,
 }: ResultsPanelProps) {
@@ -58,9 +102,10 @@ export function ResultsPanel({
     return (
       <section className="results-shell">
         <div className="notice-card warning">
-          <h2>{dictionary.results.noResultsTitle}</h2>
+          <h2 ref={headingRef} tabIndex={-1}>{dictionary.results.noResultsTitle}</h2>
           <p>{dictionary.results.noResultsBody}</p>
         </div>
+        <AlternativeResults outcome={outcome} locale={locale} />
         <div className="question-actions align-left">
           <button type="button" className="secondary-button" onClick={onReviewAnswers}>
             {dictionary.results.adjust}
@@ -77,7 +122,7 @@ export function ResultsPanel({
     <section className="results-shell">
       <header className="results-hero">
         <p className="eyebrow">{dictionary.results.topMatch}</p>
-        <h2>{dictionary.results.eatToday(leadStyle?.label ?? lead.style.label)}</h2>
+        <h2 ref={headingRef} tabIndex={-1}>{dictionary.results.eatToday(leadStyle?.label ?? lead.style.label)}</h2>
         <p className="results-summary">{leadStyle?.summary ?? lead.style.summary}</p>
 
         <div className="hero-metrics">
@@ -129,14 +174,22 @@ export function ResultsPanel({
         </div>
       </header>
 
-      <RamenFinderMap result={lead} locale={locale} />
+      <Suspense
+        fallback={(
+          <section className="ramen-finder" aria-busy="true" aria-live="polite">
+            <p>{dictionary.results.map.loading}</p>
+          </section>
+        )}
+      >
+        <RamenFinderMap result={lead} locale={locale} />
+      </Suspense>
 
       <div className="results-grid">
         {outcome.results.map((result, index) => (
           <article
             key={result.coreType.id}
             className="result-card"
-            style={{ '--accent-color': result.style.accent } as React.CSSProperties}
+            style={{ '--accent-color': result.style.accent } as CSSProperties}
           >
             <div className="result-card__topline">
               <span className="rank-badge">#{index + 1}</span>
@@ -176,7 +229,12 @@ export function ResultsPanel({
                           <div className="catalog-card__headline">
                             <strong>{store.name}</strong>
                             {store.sourceUrl ? (
-                              <a href={store.sourceUrl} target="_blank" rel="noreferrer">
+                              <a
+                                href={store.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={dictionary.app.opensInNewTab(dictionary.results.officialPage)}
+                              >
                                 {dictionary.results.officialPage}
                               </a>
                             ) : null}
@@ -240,31 +298,7 @@ export function ResultsPanel({
         ))}
       </div>
 
-      {outcome.alternativeResults.length ? (
-        <section className="alternative-section">
-          <div className="section-heading">
-            <p className="eyebrow">{dictionary.results.nearbyEyebrow}</p>
-            <h3>{dictionary.results.nearbyTitle}</h3>
-            <p>{dictionary.results.nearbyBody}</p>
-          </div>
-
-          <div className="alternative-list">
-            {outcome.alternativeResults.map((result) => (
-              <article
-                key={result.coreType.id}
-                className="alternative-card"
-                style={{ '--accent-color': result.style.accent } as React.CSSProperties}
-              >
-                <div>
-                  <h4>{localizeStyle(result, locale).label}</h4>
-                  <p>{formatCoreDescriptor(result, locale)}</p>
-                </div>
-                <span>{result.confidence}%</span>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <AlternativeResults outcome={outcome} locale={locale} />
     </section>
   )
 }
